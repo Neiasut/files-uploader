@@ -1,7 +1,10 @@
 import FilesUploader from './FilesUploader';
 
 test('init', () => {
-  const instance = new FilesUploader();
+  const instanceRoot = document.createElement('div');
+  instanceRoot.id = 'test';
+  document.body.appendChild(instanceRoot);
+  const instance = new FilesUploader('#test');
   expect(instance).toBeDefined();
   expect(instance).toBeInstanceOf(Object);
 });
