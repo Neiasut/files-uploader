@@ -62,9 +62,9 @@ export default class LoadingComponent {
   }
 
   setStatus(status: FilesUploaderStatus) {
-    this.wrapper.setAttribute('data-file-status', FilesUploaderStatus[status].toLowerCase());
+    this.wrapper.setAttribute('data-file-status', status);
     this.status = status;
-    if (status === FilesUploaderStatus.Error) {
+    if (status !== FilesUploaderStatus.Error) {
       this.errorTypes = [];
     }
     if (this.onChangeStatus !== null) {
@@ -72,7 +72,7 @@ export default class LoadingComponent {
     }
   }
 
-  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys<string>): void {
+  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void {
     this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
     if (this.onError !== null) {

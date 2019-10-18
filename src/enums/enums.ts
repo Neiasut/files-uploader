@@ -1,13 +1,18 @@
 export enum FilesUploaderStatus {
-  WaitUpload = 'WaitUpload',
-  Uploading = 'Uploading',
-  Complete = 'Complete',
-  Error = 'Error'
+  WaitUpload = 'waitUpload',
+  Uploading = 'uploading',
+  Complete = 'complete',
+  Error = 'error'
 }
 
 export enum FilesUploaderErrorType {
-  MoreMaxFiles = 'MoreMaxFiles',
-  Size = 'Size',
-  Type = 'Type',
-  Server = 'Server'
+  MoreMaxFiles = 'moreMaxFiles',
+  Size = 'size',
+  Type = 'type',
+  Server = 'server'
+}
+
+export enum FilesUploaderTypeFile {
+  Introduced = 'introduced',
+  Downloaded = 'downloaded'
 }

@@ -145,15 +145,10 @@ export const formatGetParams = (params: { [key: string]: string }): string => {
 
 export const getFilesUploaderErrorInfo = (
   errors: FilesUploaderErrorType[],
-  texts: FilesUploaderErrorKeys<string>
+  texts: FilesUploaderErrorKeys
 ): FilesUploaderErrorInfo[] => {
-  return Object.entries(texts)
-    .filter(data => {
-      const [reason] = data;
-      return errors.indexOf(FilesUploaderErrorType[reason]) !== -1;
-    })
-    .map(data => ({
-      type: FilesUploaderErrorType[data[0]],
-      text: data[1]
-    }));
+  return errors.map(error => ({
+    type: error,
+    text: texts[error]
+  }));
 };

@@ -13,9 +13,9 @@ export interface FilesUploaderListElements {
 }
 
 export interface FilesUploaderLabels {
-  Loader?: string;
-  InProcessList?: string;
-  CompleteList?: string;
+  loader?: string;
+  inProcessList?: string;
+  completeList?: string;
 }
 
 export interface FilesUploaderSettings {
@@ -29,8 +29,8 @@ export interface FilesUploaderSettings {
   loadingComponentConstructorFn?: FilesUploaderLoadingConstructorFn;
   fileComponentConstructorFn?: FilesUploaderFileConstructorFn;
   labels?: FilesUploaderLabels;
-  statusTexts?: FilesUploaderStatusesKeys<string>;
-  errorTexts?: FilesUploaderErrorKeys<string>;
+  statusTexts?: FilesUploaderStatusesKeys;
+  errorTexts?: FilesUploaderErrorKeys;
 }
 
 export interface FilesUploaderLoadingElement extends Element {
@@ -48,10 +48,11 @@ export type FilesUploaderLoadingConstructorFn = (
   onError?: (errorTexts: FilesUploaderErrorInfo[]) => void;
 };
 
-type FilesUploaderStatusesKeys<K> = { [key in keyof typeof FilesUploaderStatus]?: K };
-export type FilesUploaderErrorKeys<K> = { [key in keyof typeof FilesUploaderErrorType]?: K };
+export type FilesUploaderStatusesKeys = Record<FilesUploaderStatus, string>;
+export type FilesUploaderErrorKeys = Record<FilesUploaderErrorType, string>;
+
 export interface FilesUploaderErrorInfo {
-  type: keyof typeof FilesUploaderErrorType;
+  type: FilesUploaderErrorType;
   text: string;
 }
 
@@ -65,7 +66,7 @@ export type FilesUploaderFileConstructorFn = (
 export interface FilesUploaderFileInfo {
   readonly name: string;
   readonly size: number;
-  readonly type: string;
+  readonly extension: string;
 }
 
 export interface FilesUploaderFileDataElement extends FilesUploaderFileInfo {

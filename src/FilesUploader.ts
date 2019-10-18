@@ -42,21 +42,21 @@ export default class FilesUploader {
       actionRemove: '/',
       acceptTypes: [],
       labels: {
-        Loader: 'Drag file here or select on device',
-        InProcessList: 'List files in process',
-        CompleteList: 'List complete files'
+        loader: 'Drag file here or select on device',
+        inProcessList: 'List files in process',
+        completeList: 'List complete files'
       },
       statusTexts: {
-        WaitUpload: 'Wait Upload',
-        Uploading: 'Uploading files',
-        Complete: 'Complete downloading files',
-        Error: 'test'
+        [FilesUploaderStatus.WaitUpload]: 'Wait Upload',
+        [FilesUploaderStatus.Uploading]: 'Uploading files',
+        [FilesUploaderStatus.Complete]: 'Complete downloading files',
+        [FilesUploaderStatus.Error]: 'test'
       },
       errorTexts: {
-        MoreMaxFiles: 'More max files',
-        Size: 'More max size file',
-        Type: 'Not type',
-        Server: 'Server error'
+        [FilesUploaderErrorType.MoreMaxFiles]: 'More max files',
+        [FilesUploaderErrorType.Size]: 'More max size file',
+        [FilesUploaderErrorType.Type]: 'Not type',
+        [FilesUploaderErrorType.Server]: 'Server error'
       },
       maxFiles: 3,
       maxSize: 10 * 1024 * 1024,
@@ -72,16 +72,16 @@ export default class FilesUploader {
     const wrapper = document.createElement('div');
     wrapper.classList.add('FilesUploader');
     setInput(input, maxFiles, acceptTypes, maxSize);
-    const loader = createLoader(labels.Loader);
+    const loader = createLoader(labels.loader);
     loader.classList.add('FilesUploader-FilesUploaderLoader');
     wrapper.appendChild(loader);
     const wrapperLists = document.createElement('div');
     wrapperLists.classList.add('FilesUploader-WrapperLists');
     const inProcessList = createListElements('inProcess');
     const completeList = createListElements('complete');
-    const inProcessListWrapper = createListWrapper('inProcess', labels.InProcessList);
+    const inProcessListWrapper = createListWrapper('inProcess', labels.inProcessList);
     inProcessListWrapper.appendChild(inProcessList);
-    const completeListWrapper = createListWrapper('complete', labels.CompleteList);
+    const completeListWrapper = createListWrapper('complete', labels.completeList);
     completeListWrapper.appendChild(completeList);
     wrapperLists.appendChild(inProcessList);
     wrapperLists.appendChild(completeList);
