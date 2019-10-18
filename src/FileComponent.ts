@@ -5,6 +5,7 @@ import { formatGetParams } from './functions';
 export default class FileComponent {
   wrapper: Element;
   pathFile: string;
+  data: FilesUploaderFileDataElement;
   constructor(
     insertionPoint: Element,
     data: FilesUploaderFileDataElement,

@@ -1,9 +1,10 @@
 import {
+  FilesUploaderErrorInfo,
+  FilesUploaderErrorKeys,
   FilesUploaderFileConstructorFn,
-  FilesUploaderLoadingConstructorFn,
-  FilesUploaderLoadingDataElement
+  FilesUploaderLoadingConstructorFn
 } from './interfaces/interfaces';
-import { FilesUploaderStatus } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 
 export const mergeDeepConfig = (...objects) => {
   const isObject = obj => obj && typeof obj === 'object';
@@ -86,17 +87,16 @@ export const validateFileExtension = (file: File, acceptTypes: string[]): boolea
 
 export const validateFileSize = (file: File, maxSize: number): boolean => file.size <= maxSize;
 
-export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstructorFn = (
-  data: FilesUploaderLoadingDataElement,
-  onUpload,
-  onCancel
-) => {
+export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstructorFn = (file, onUpload, onCancel) => {
   const root = document.createElement('div');
   root.innerHTML = `
-  <span class="name">${data.file.name}</span>
+  <span class="name">${file.name}</span>
   <span class="percentage"></span>
   <span class="errors"></span>
-  <span class="actions"><button class="upload" type="button">upload</button><button class="cancel" type="button">cancel</button></span>
+  <span class="actions">
+    <button class="upload" type="button">upload</button>
+    <button class="cancel" type="button">cancel</button>
+  </span>
   `;
   const percentage = root.querySelector('.percentage');
   root.querySelector('.upload').addEventListener('click', onUpload);
@@ -141,4 +141,19 @@ export const formatGetParams = (params: { [key: string]: string }): string => {
     return '?' + entries.map(entry => `${entry[0]}=${encodeURIComponent(entry[1])}`).join('&');
   }
   return '';
+};
+
+export const getFilesUploaderErrorInfo = (
+  errors: FilesUploaderErrorType[],
+  texts: FilesUploaderErrorKeys<string>
+): FilesUploaderErrorInfo[] => {
+  return Object.entries(texts)
+    .filter(data => {
+      const [reason] = data;
+      return errors.indexOf(FilesUploaderErrorType[reason]) !== -1;
+    })
+    .map(data => ({
+      type: FilesUploaderErrorType[data[0]],
+      text: data[1]
+    }));
 };

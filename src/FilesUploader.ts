@@ -11,10 +11,8 @@ import {
   validateFileSize
 } from './functions';
 import {
-  FilesUploaderErrorInfo,
   FilesUploaderFileDataElement,
   FilesUploaderListElements,
-  FilesUploaderLoadingDataElement,
   FilesUploaderSettings
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
@@ -127,9 +125,20 @@ export default class FilesUploader {
     const { maxSize, acceptTypes, maxFiles, loadingComponentConstructorFn, autoUpload } = this.configuration;
     this.counterLoadFiles += 1;
 
-    let status: FilesUploaderStatus = FilesUploaderStatus.WaitUpload;
+    const element = new LoadingComponent(
+      this.elements.inProcessList,
+      this.counterLoadFiles,
+      file,
+      loadingComponentConstructorFn,
+      () => {
+        this.uploadFile(element);
+      },
+      () => {
+        this.removeQueueFile(element);
+      }
+    );
+    this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
-
     if (!validateFileSize(file, maxSize)) {
       errorTypes.push(FilesUploaderErrorType.Size);
     }
@@ -140,69 +149,38 @@ export default class FilesUploader {
       errorTypes.push(FilesUploaderErrorType.MoreMaxFiles);
     }
     if (errorTypes.length > 0) {
-      status = FilesUploaderStatus.Error;
+      this.setErrorToElementQueue(element, errorTypes);
     }
-
-    const objFile = this.queue.createElement(file, this.counterLoadFiles);
-    this.queue.changeElement(objFile.numb, status, errorTypes);
-
-    const element = new LoadingComponent(
-      this.elements.inProcessList,
-      this.counterLoadFiles,
-      objFile,
-      loadingComponentConstructorFn,
-      () => {
-        this.uploadFile(objFile, element);
-      },
-      () => {
-        this.removeQueueFile(objFile, element);
-      }
-    );
-
-    if (errorTypes.length > 0) {
-      element.setError(this.getErrorTextsForReasons(errorTypes));
-    }
-
-    if (autoUpload && !objFile.error) {
-      this.uploadFile(objFile, element);
+    if (autoUpload && !element.error) {
+      this.uploadFile(element);
     }
   }
 
-  private uploadFile(data: FilesUploaderLoadingDataElement, element: LoadingComponent) {
+  private setErrorToElementQueue(element: LoadingComponent, errors: FilesUploaderErrorType[]) {
+    element.setError(errors, this.configuration.errorTexts);
+  }
+
+  private uploadFile(element: LoadingComponent) {
     const { actionLoad } = this.configuration;
-    if (!data.error || data.errorTypes.includes(FilesUploaderErrorType.Server)) {
-      this.queue.changeElement(data.numb, FilesUploaderStatus.Uploading, []);
+    if (!element.error || element.errorTypes.includes(FilesUploaderErrorType.Server)) {
+      element.setStatus(FilesUploaderStatus.Uploading);
       element
         .upload(actionLoad)
         .then(dataResponse => {
-          this.queue.changeElement(data.numb, FilesUploaderStatus.Complete, []);
-          this.removeQueueFile(data, element);
+          element.setStatus(FilesUploaderStatus.Complete);
+          this.removeQueueFile(element);
           this.addFile(dataResponse);
         })
         .catch((reasons: FilesUploaderErrorType[]) => {
-          element.setError(this.getErrorTextsForReasons(reasons));
-          const obj = this.queue.get(data.numb);
-          this.queue.changeElement(obj.numb, FilesUploaderStatus.Error, reasons);
+          this.setErrorToElementQueue(element, reasons);
         });
     }
   }
 
-  private removeQueueFile(data: FilesUploaderLoadingDataElement, element: LoadingComponent) {
+  private removeQueueFile(element: LoadingComponent) {
     element.abort();
     element.destroy();
-    this.queue.remove(data.numb);
-  }
-
-  private getErrorTextsForReasons(reasons: FilesUploaderErrorType[]): FilesUploaderErrorInfo[] {
-    return Object.entries(this.configuration.errorTexts)
-      .filter(data => {
-        const [reason] = data;
-        return reasons.indexOf(FilesUploaderErrorType[reason]) !== -1;
-      })
-      .map(data => ({
-        type: FilesUploaderErrorType[data[0]],
-        text: data[1]
-      }));
+    this.queue.remove(element.numb);
   }
 
   addFile(data: FilesUploaderFileDataElement) {

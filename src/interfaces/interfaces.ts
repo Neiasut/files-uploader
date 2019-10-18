@@ -33,20 +33,12 @@ export interface FilesUploaderSettings {
   errorTexts?: FilesUploaderErrorKeys<string>;
 }
 
-export interface FilesUploaderLoadingDataElement {
-  file: File;
-  status: FilesUploaderStatus;
-  error: boolean;
-  numb: number;
-  errorTypes: FilesUploaderErrorType[];
-}
-
 export interface FilesUploaderLoadingElement extends Element {
   filesUploaderLoadingElement?: LoadingComponent;
 }
 
 export type FilesUploaderLoadingConstructorFn = (
-  data: FilesUploaderLoadingDataElement,
+  file: File,
   onUpload: () => void,
   onCancel: () => void
 ) => {

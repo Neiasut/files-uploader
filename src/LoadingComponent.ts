@@ -1,12 +1,12 @@
 import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 import {
   FilesUploaderErrorInfo,
+  FilesUploaderErrorKeys,
   FilesUploaderFileDataElement,
   FilesUploaderLoadingConstructorFn,
-  FilesUploaderLoadingDataElement,
   FilesUploaderLoadingElement
 } from './interfaces/interfaces';
-import { calcPercentage } from './functions';
+import { calcPercentage, getFilesUploaderErrorInfo } from './functions';
 
 export default class LoadingComponent {
   percent = 0;
@@ -15,17 +15,22 @@ export default class LoadingComponent {
   protected onChangeStatus: (status: FilesUploaderStatus) => void | null;
   protected onError: (errors: FilesUploaderErrorInfo[]) => void | null;
   xhr: XMLHttpRequest | null = null;
-  data: FilesUploaderLoadingDataElement;
+  status: FilesUploaderStatus;
+  errorTypes: FilesUploaderErrorType[] = [];
+  readonly file: File;
+  readonly numb: number;
+
   constructor(
     insertionPoint: Element,
     numb: number,
-    data: FilesUploaderLoadingDataElement,
+    file: File,
     constructorFn: FilesUploaderLoadingConstructorFn,
     onUpload: () => void,
     onCancel: () => void
   ) {
-    this.data = data;
-    const dataFromConstructorFn = constructorFn(data, onUpload, onCancel);
+    this.numb = numb;
+    this.file = file;
+    const dataFromConstructorFn = constructorFn(file, onUpload, onCancel);
     const wrapper = this.getWrapper(numb);
     wrapper.appendChild(dataFromConstructorFn.elementDOM);
     const onChangePercent = dataFromConstructorFn.onChangePercent;
@@ -36,7 +41,11 @@ export default class LoadingComponent {
     this.onError = typeof onError === 'function' ? onError : null;
     insertionPoint.appendChild(wrapper);
     this.wrapper = wrapper;
-    this.setStatus(data.status);
+    this.setStatus(FilesUploaderStatus.WaitUpload);
+  }
+
+  get error(): boolean {
+    return this.errorTypes.length > 0;
   }
 
   protected getWrapper(numb: number): FilesUploaderLoadingElement {
@@ -54,15 +63,20 @@ export default class LoadingComponent {
 
   setStatus(status: FilesUploaderStatus) {
     this.wrapper.setAttribute('data-file-status', FilesUploaderStatus[status].toLowerCase());
+    this.status = status;
+    if (status === FilesUploaderStatus.Error) {
+      this.errorTypes = [];
+    }
     if (this.onChangeStatus !== null) {
       this.onChangeStatus(status);
     }
   }
 
-  setError(errors: FilesUploaderErrorInfo[]): void {
+  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys<string>): void {
+    this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
     if (this.onError !== null) {
-      this.onError(errors);
+      this.onError(getFilesUploaderErrorInfo(errors, listTextErrors));
     }
   }
 
@@ -88,7 +102,7 @@ export default class LoadingComponent {
         false
       );
       const dataUpload = new FormData();
-      dataUpload.append('file', this.data.file);
+      dataUpload.append('file', this.file);
       dataUpload.append(
         'object',
         JSON.stringify({

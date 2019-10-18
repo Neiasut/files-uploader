@@ -1,14 +1,18 @@
-import { FilesUploaderLoadingDataElement } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import { FilesUploaderStatus } from './enums/enums';
+import LoadingComponent from './LoadingComponent';
 
 export default class FilesUploaderQueue {
-  private arr: FilesUploaderLoadingDataElement[] = [];
+  private arr: LoadingComponent[] = [];
 
-  get(numb: number): FilesUploaderLoadingDataElement {
+  add(element: LoadingComponent) {
+    this.arr.push(element);
+  }
+
+  get(numb: number): LoadingComponent {
     return this.arr.find(element => element.numb === numb);
   }
 
-  remove(numb: number): FilesUploaderLoadingDataElement {
+  remove(numb: number): LoadingComponent {
     const element = this.get(numb);
     const index = this.arr.indexOf(element);
     if (index !== -1) {
@@ -17,32 +21,8 @@ export default class FilesUploaderQueue {
     return element;
   }
 
-  changeElement(numb: number, status: FilesUploaderStatus, errorReasons: FilesUploaderErrorType[]) {
-    const data = this.get(numb);
-    if (typeof data !== 'undefined') {
-      data.error = status === FilesUploaderStatus.Error;
-      data.status = status;
-      data.errorTypes = errorReasons;
-
-      return;
-    }
-    throw new Error(`Element with numb = "${numb}" doesn't exist in queue!`);
-  }
-
   get length() {
     return this.arr.length;
-  }
-
-  createElement(file: File, numb: number): FilesUploaderLoadingDataElement {
-    const element: FilesUploaderLoadingDataElement = {
-      file,
-      numb,
-      status: FilesUploaderStatus.WaitUpload,
-      error: false,
-      errorTypes: []
-    };
-    this.arr.push(element);
-    return element;
   }
 
   get countUploadingFiles(): number {
