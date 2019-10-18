@@ -1,17 +1,40 @@
 import './styles/FilesUploader.scss';
-import { createInput, createListElements, createListWrapper, createLoader } from './functions';
-import { FilesUploaderListElements, FilesUploaderSettings } from './interfaces/interfaces';
+import {
+  createListElements,
+  createListWrapper,
+  createLoader,
+  defaultFileComponentConstructorFn,
+  defaultLoadingComponentConstructorFn,
+  mergeDeepConfig,
+  setInput,
+  validateFileExtension,
+  validateFileSize
+} from './functions';
+import {
+  FilesUploaderErrorInfo,
+  FilesUploaderFileDataElement,
+  FilesUploaderListElements,
+  FilesUploaderLoadingDataElement,
+  FilesUploaderSettings
+} from './interfaces/interfaces';
+import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import LoadingComponent from './LoadingComponent';
+import FilesUploaderQueue from './FilesUploaderQueue';
+import FilesUploaderCompleteList from './FilesUploaderCompleteList';
+import FileComponent from './FileComponent';
 
 export default class FilesUploader {
   elements: FilesUploaderListElements;
   settings: FilesUploaderSettings;
   configuration: FilesUploaderSettings;
+  private queue = new FilesUploaderQueue();
+  private files = new FilesUploaderCompleteList();
+  private counterLoadFiles = 0;
   constructor(query: string, settings?: FilesUploaderSettings) {
-    const rootElement = document.querySelector(query);
+    const input = document.querySelector(query);
     this.settings = settings;
     this.setConfiguration(settings);
-    this.createCarcass();
-    rootElement.appendChild(this.elements.wrapper);
+    this.createCarcass(input as HTMLInputElement);
     this.addListeners();
   }
 
@@ -20,40 +43,53 @@ export default class FilesUploader {
       actionLoad: '/',
       actionRemove: '/',
       acceptTypes: [],
-      loaderLabel: 'Drag file here or select on device',
-      maxFies: 3,
+      labels: {
+        Loader: 'Drag file here or select on device',
+        InProcessList: 'List files in process',
+        CompleteList: 'List complete files'
+      },
+      statusTexts: {
+        WaitUpload: 'Wait Upload',
+        Uploading: 'Uploading files',
+        Complete: 'Complete downloading files',
+        Error: 'test'
+      },
+      errorTexts: {
+        MoreMaxFiles: 'More max files',
+        Size: 'More max size file',
+        Type: 'Not type',
+        Server: 'Server error'
+      },
+      maxFiles: 3,
       maxSize: 10 * 1024 * 1024,
-      inputName: 'files'
+      maxParallelUploads: 3,
+      autoUpload: false,
+      loadingComponentConstructorFn: defaultLoadingComponentConstructorFn,
+      fileComponentConstructorFn: defaultFileComponentConstructorFn
     };
   }
 
-  private createCarcass() {
-    const {
-      loaderLabel,
-      inputName,
-      inProcessListLabel,
-      completeListLabel,
-      maxFies,
-      acceptTypes,
-      maxSize
-    } = this.configuration;
+  private createCarcass(input: HTMLInputElement) {
+    const { labels, maxFiles, acceptTypes, maxSize } = this.configuration;
     const wrapper = document.createElement('div');
     wrapper.classList.add('FilesUploader');
-    const input = createInput(inputName, maxFies, acceptTypes, maxSize);
-    const loader = createLoader(input, loaderLabel);
+    setInput(input, maxFiles, acceptTypes, maxSize);
+    const loader = createLoader(labels.Loader);
     loader.classList.add('FilesUploader-FilesUploaderLoader');
     wrapper.appendChild(loader);
     const wrapperLists = document.createElement('div');
     wrapperLists.classList.add('FilesUploader-WrapperLists');
     const inProcessList = createListElements('inProcess');
     const completeList = createListElements('complete');
-    const inProcessListWrapper = createListWrapper('inProcess', inProcessListLabel);
+    const inProcessListWrapper = createListWrapper('inProcess', labels.InProcessList);
     inProcessListWrapper.appendChild(inProcessList);
-    const completeListWrapper = createListWrapper('complete', completeListLabel);
+    const completeListWrapper = createListWrapper('complete', labels.CompleteList);
     completeListWrapper.appendChild(completeList);
     wrapperLists.appendChild(inProcessList);
     wrapperLists.appendChild(completeList);
     wrapper.appendChild(wrapperLists);
+    input.parentNode.insertBefore(wrapper, input.nextSibling);
+    loader.appendChild(input);
     this.elements = {
       input,
       wrapper,
@@ -66,13 +102,121 @@ export default class FilesUploader {
     };
   }
 
-  private setConfiguration(settings: FilesUploaderSettings) {
-    this.configuration = Object.assign({}, FilesUploader.defaultSettings, settings);
+  private setConfiguration(settings?: FilesUploaderSettings) {
+    if (typeof settings !== 'object' || settings === null) {
+      settings = {};
+    }
+    this.configuration = mergeDeepConfig({}, FilesUploader.defaultSettings, settings);
   }
 
   private addListeners() {
-    this.elements.input.addEventListener('change', (...args) => {
-      console.log(args, this.elements.input.files);
+    this.elements.input.addEventListener('change', () => {
+      this.onAddFiles();
     });
+  }
+
+  private onAddFiles() {
+    const { input } = this.elements;
+    Array.from(input.files).forEach(file => {
+      this.addFileToQueue(file);
+    });
+    input.value = '';
+  }
+
+  private addFileToQueue(file: File) {
+    const { maxSize, acceptTypes, maxFiles, loadingComponentConstructorFn, autoUpload } = this.configuration;
+    this.counterLoadFiles += 1;
+
+    let status: FilesUploaderStatus = FilesUploaderStatus.WaitUpload;
+    const errorTypes: FilesUploaderErrorType[] = [];
+
+    if (!validateFileSize(file, maxSize)) {
+      errorTypes.push(FilesUploaderErrorType.Size);
+    }
+    if (!validateFileExtension(file, acceptTypes)) {
+      errorTypes.push(FilesUploaderErrorType.Type);
+    }
+    if (this.files.length + this.queue.countUploadingFiles >= maxFiles) {
+      errorTypes.push(FilesUploaderErrorType.MoreMaxFiles);
+    }
+    if (errorTypes.length > 0) {
+      status = FilesUploaderStatus.Error;
+    }
+
+    const objFile = this.queue.createElement(file, this.counterLoadFiles);
+    this.queue.changeElement(objFile.numb, status, errorTypes);
+
+    const element = new LoadingComponent(
+      this.elements.inProcessList,
+      this.counterLoadFiles,
+      objFile,
+      loadingComponentConstructorFn,
+      () => {
+        this.uploadFile(objFile, element);
+      },
+      () => {
+        this.removeQueueFile(objFile, element);
+      }
+    );
+
+    if (errorTypes.length > 0) {
+      element.setError(this.getErrorTextsForReasons(errorTypes));
+    }
+
+    if (autoUpload && !objFile.error) {
+      this.uploadFile(objFile, element);
+    }
+  }
+
+  private uploadFile(data: FilesUploaderLoadingDataElement, element: LoadingComponent) {
+    const { actionLoad } = this.configuration;
+    if (!data.error || data.errorTypes.includes(FilesUploaderErrorType.Server)) {
+      this.queue.changeElement(data.numb, FilesUploaderStatus.Uploading, []);
+      element
+        .upload(actionLoad)
+        .then(dataResponse => {
+          this.queue.changeElement(data.numb, FilesUploaderStatus.Complete, []);
+          this.removeQueueFile(data, element);
+          this.addFile(dataResponse);
+        })
+        .catch((reasons: FilesUploaderErrorType[]) => {
+          element.setError(this.getErrorTextsForReasons(reasons));
+          const obj = this.queue.get(data.numb);
+          this.queue.changeElement(obj.numb, FilesUploaderStatus.Error, reasons);
+        });
+    }
+  }
+
+  private removeQueueFile(data: FilesUploaderLoadingDataElement, element: LoadingComponent) {
+    element.abort();
+    element.destroy();
+    this.queue.remove(data.numb);
+  }
+
+  private getErrorTextsForReasons(reasons: FilesUploaderErrorType[]): FilesUploaderErrorInfo[] {
+    return Object.entries(this.configuration.errorTexts)
+      .filter(data => {
+        const [reason] = data;
+        return reasons.indexOf(FilesUploaderErrorType[reason]) !== -1;
+      })
+      .map(data => ({
+        type: FilesUploaderErrorType[data[0]],
+        text: data[1]
+      }));
+  }
+
+  addFile(data: FilesUploaderFileDataElement) {
+    this.files.add(data);
+    const fileInstance = new FileComponent(
+      this.elements.completeList,
+      data,
+      this.configuration.fileComponentConstructorFn,
+      () => {
+        fileInstance.delete(this.configuration.actionRemove).then(() => {
+          fileInstance.destroy();
+          this.files.remove(data.path);
+        });
+      }
+    );
   }
 }

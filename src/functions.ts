@@ -1,24 +1,48 @@
-export const createLoader = (input: HTMLInputElement, text: string): Element => {
+import {
+  FilesUploaderFileConstructorFn,
+  FilesUploaderLoadingConstructorFn,
+  FilesUploaderLoadingDataElement
+} from './interfaces/interfaces';
+import { FilesUploaderStatus } from './enums/enums';
+
+export const mergeDeepConfig = (...objects) => {
+  const isObject = obj => obj && typeof obj === 'object';
+
+  return objects.reduce((prev, obj) => {
+    Object.keys(obj).forEach(key => {
+      const pVal = prev[key];
+      const oVal = obj[key];
+
+      if (Array.isArray(pVal) && Array.isArray(oVal)) {
+        prev[key] = oVal;
+      } else if (isObject(pVal) && isObject(oVal)) {
+        prev[key] = mergeDeepConfig(pVal, oVal);
+      } else {
+        prev[key] = oVal;
+      }
+    });
+
+    return prev;
+  }, {});
+};
+
+export const createLoader = (text: string): Element => {
   const loader = document.createElement('div');
   loader.classList.add('FilesUploaderLoader');
   const textEl = document.createElement('div');
   textEl.classList.add('FilesUploaderLoader-Text');
   textEl.innerHTML = text;
   loader.appendChild(textEl);
-  input.classList.add('FilesUploaderLoader-Input');
-  loader.appendChild(input);
   return loader;
 };
 
-export const createInput = (name: string, maxFiles: number, acceptTypes: string[], size: number): HTMLInputElement => {
-  const input = document.createElement('input');
+export const setInput = (input: HTMLInputElement, maxFiles: number, acceptTypes: string[], size: number) => {
   input.setAttribute('data-files-uploader-element', 'input');
   input.type = 'file';
-  input.name = name;
   input.size = size;
+  input.classList.add('FilesUploaderLoader-Input');
   setAttrMultiple(input, maxFiles);
   setAcceptTypes(input, acceptTypes);
-  return input;
 };
 
 type typeLists = 'inProcess' | 'complete';
@@ -53,8 +77,68 @@ const setAttrMultiple = (input: HTMLInputElement, maxFiles: number) => {
   input.multiple = maxFiles > 1;
 };
 
-/*export const createWrapperElement = (type: typeLists): Element => {
-  const elementWrapper = document.createElement('li');
-  elementWrapper.classList.add('FilesUploaderList-Element', `FilesUploaderList-Element_type_${type}`);
-  return elementWrapper;
-};*/
+export const getFileExtension = (fileName: string): string => fileName.split('.').pop();
+
+export const validateFileExtension = (file: File, acceptTypes: string[]): boolean => {
+  const extension = getFileExtension(file.name).toLowerCase();
+  return acceptTypes.some(availableExtension => availableExtension.toLowerCase() === extension);
+};
+
+export const validateFileSize = (file: File, maxSize: number): boolean => file.size <= maxSize;
+
+export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstructorFn = (
+  data: FilesUploaderLoadingDataElement,
+  onUpload,
+  onCancel
+) => {
+  const root = document.createElement('div');
+  root.innerHTML = `
+  <span class="name">${data.file.name}</span>
+  <span class="percentage"></span>
+  <span class="errors"></span>
+  <span class="actions"><button class="upload" type="button">upload</button><button class="cancel" type="button">cancel</button></span>
+  `;
+  const percentage = root.querySelector('.percentage');
+  root.querySelector('.upload').addEventListener('click', onUpload);
+  root.querySelector('.cancel').addEventListener('click', onCancel);
+  const errors = root.querySelector('.errors');
+  return {
+    elementDOM: root,
+    onChangePercent: percent => {
+      percentage.textContent = `${percent}%`;
+    },
+    onChangeStatus: status => {
+      if (status !== FilesUploaderStatus.Error) {
+        errors.textContent = '';
+      }
+    },
+    onError: errorTexts => {
+      errors.textContent = errorTexts.map(info => info.text).join(', ');
+    }
+  };
+};
+
+export const calcPercentage = (upload: number, all: number, round: number = 2) => {
+  return +((upload / all) * 100).toFixed(round);
+};
+
+export const defaultFileComponentConstructorFn: FilesUploaderFileConstructorFn = (data, onDelete) => {
+  const root = document.createElement('div');
+  root.innerHTML = `
+  <span>${data.name}</span>
+  <span><button type="button">Удалить</button></span>
+  `;
+  root.querySelector('button').addEventListener('click', onDelete);
+
+  return {
+    elementDOM: root
+  };
+};
+
+export const formatGetParams = (params: { [key: string]: string }): string => {
+  const entries = Object.entries(params);
+  if (entries.length) {
+    return '?' + entries.map(entry => `${entry[0]}=${encodeURIComponent(entry[1])}`).join('&');
+  }
+  return '';
+};

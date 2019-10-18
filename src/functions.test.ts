@@ -1,7 +1,8 @@
-import { createInput, createListWrapper, createLoader } from './functions';
+import { createListWrapper, createLoader, setInput } from './functions';
 
-test('createInput', () => {
-  const input = createInput('files', 2, ['json', 'png'], 40);
+test('setInput', () => {
+  const input = document.createElement('input');
+  setInput(input, 2, ['json', 'png'], 40);
   expect(input).toBeInstanceOf(HTMLInputElement);
   expect(input.multiple).toBeTruthy();
   expect(input.accept).toBe('.json, .png');
@@ -9,12 +10,10 @@ test('createInput', () => {
 });
 
 test('createLoader', () => {
-  const input = createInput('files', 2, ['json', 'png'], 40);
-  const loader = createLoader(input, 'test string');
+  const loader = createLoader('test string');
   expect(loader).toBeInstanceOf(Element);
   expect(loader.classList.contains('FilesUploaderLoader')).toBeTruthy();
   expect(loader.querySelector('.FilesUploaderLoader-Text')).toBeDefined();
-  expect(loader.querySelector('.FilesUploaderLoader-Input')).toBeDefined();
 });
 
 describe('createListWrapper', () => {
