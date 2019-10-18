@@ -1,5 +1,5 @@
 import { FilesUploaderFileConstructorFn, FilesUploaderFileDataElement } from './interfaces/interfaces';
-import { FilesUploaderErrorType } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderTypeFile } from './enums/enums';
 import { formatGetParams } from './functions';
 
 export default class FileComponent {
@@ -21,7 +21,9 @@ export default class FileComponent {
   }
 
   protected getWrapper(): Element {
-    return document.createElement('li');
+    const root = document.createElement('li');
+    root.setAttribute('data-file-type', FilesUploaderTypeFile.Downloaded);
+    return root;
   }
 
   delete(pathRemove: string) {

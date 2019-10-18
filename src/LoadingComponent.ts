@@ -1,4 +1,4 @@
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import {
   FilesUploaderErrorInfo,
   FilesUploaderErrorKeys,
@@ -51,6 +51,7 @@ export default class LoadingComponent {
   protected getWrapper(numb: number): FilesUploaderLoadingElement {
     const root = document.createElement('li');
     root.setAttribute('data-index', numb.toString());
+    root.setAttribute('data-file-type', FilesUploaderTypeFile.Introduced);
     return root;
   }
 
