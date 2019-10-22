@@ -1,7 +1,7 @@
 import { FilesUploaderStatus } from './enums/enums';
 import LoadingComponent from './LoadingComponent';
 
-export default class FilesUploaderQueue {
+export default class Queue {
   private arr: LoadingComponent[] = [];
 
   add(element: LoadingComponent) {

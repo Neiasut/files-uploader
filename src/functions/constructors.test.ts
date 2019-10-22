@@ -63,7 +63,10 @@ test('defaultLoadingComponentConstructorFn', () => {
   const percent = parseFloat(result.elementDOM.querySelector('.percentage').textContent);
   expect(percent).toBe(20);
   result.onError(
-    getFilesUploaderErrorInfo([FilesUploaderErrorType.Size, FilesUploaderErrorType.Server], mockFilesUploaderErrorKeys)
+    getFilesUploaderErrorInfo(
+      [FilesUploaderErrorType.Size, FilesUploaderErrorType.Server],
+      mockFilesUploaderErrorKeys()
+    )
   );
   let errorsText = result.elementDOM.querySelector('.errors').textContent;
   expect(errorsText.length).toBeGreaterThan(0);
@@ -77,7 +80,7 @@ test('defaultLoadingComponentConstructorFn', () => {
 
 test('defaultFileComponentConstructorFn', () => {
   let a = 0;
-  const result = defaultFileComponentConstructorFn(mockFilesUploaderFileDataElement, () => {
+  const result = defaultFileComponentConstructorFn(mockFilesUploaderFileDataElement(), () => {
     a += 1;
   });
   expect(result.elementDOM).toBeInstanceOf(Element);

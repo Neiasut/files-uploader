@@ -9,14 +9,14 @@ import {
 } from './functions/constructors';
 import {
   FilesUploaderAddFileToQueueEvent,
-  FilesUploaderFileDataElement,
   FilesUploaderListElements,
+  FilesUploaderFileData,
   FilesUploaderSettings
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import LoadingComponent from './LoadingComponent';
-import FilesUploaderQueue from './FilesUploaderQueue';
-import FilesUploaderCompleteList from './FilesUploaderCompleteList';
+import Queue from './Queue';
+import CompleteList from './CompleteList';
 import FileComponent from './FileComponent';
 import EventDispatcher, { Handler } from './EventDispatcher';
 import Themes from './Themes';
@@ -25,8 +25,8 @@ export default class FilesUploader {
   elements: FilesUploaderListElements;
   settings: FilesUploaderSettings;
   configuration: FilesUploaderSettings;
-  private queue = new FilesUploaderQueue();
-  private files = new FilesUploaderCompleteList();
+  private queue = new Queue();
+  files = new CompleteList();
   private counterLoadFiles = 0;
 
   constructor(query: string, settings?: FilesUploaderSettings, themes?: string[]) {
@@ -191,18 +191,18 @@ export default class FilesUploader {
     this.queue.remove(element.numb);
   }
 
-  addFile(data: FilesUploaderFileDataElement) {
-    this.files.add(data);
+  addFile(data: FilesUploaderFileData) {
+    const info = this.files.add(data);
     const fileInstance = new FileComponent(
       this.elements.completeList,
-      data,
+      info,
       this.configuration.fileComponentConstructorFn,
       () => {
         fileInstance
           .delete(this.configuration.actionRemove)
           .then(() => {
             fileInstance.destroy();
-            this.files.remove(data.path);
+            this.files.remove(info.id);
           })
           .catch(() => {
             console.error(`File ${data.path} can't delete`);

@@ -1,6 +1,7 @@
 import {
   calcPercentage,
   formatGetParams,
+  generateRandomString,
   getFileExtension,
   getFilesUploaderErrorInfo,
   mergeDeepConfig,
@@ -9,7 +10,6 @@ import {
   validateFileSize
 } from './functions';
 import { FilesUploaderErrorType } from '../enums/enums';
-import { FilesUploaderErrorKeys } from '../interfaces/interfaces';
 import { mockDefaultFile, mockFilesUploaderErrorKeys } from '../__mock__/structures';
 
 test('mergeDeepConfig', () => {
@@ -81,10 +81,18 @@ test('formatGetParams', () => {
 });
 
 test('getFilesUploaderErrorInfo', () => {
-  const texts = mockFilesUploaderErrorKeys;
+  const texts = mockFilesUploaderErrorKeys();
   expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)).toBeInstanceOf(Object);
   expect(
     getFilesUploaderErrorInfo([FilesUploaderErrorType.Server, FilesUploaderErrorType.MoreMaxFiles], texts).length
   ).toBe(2);
   expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)[0].text).toBe('some text');
+});
+
+test('generateRandomString', () => {
+  const type = typeof generateRandomString();
+  expect(type).toBe('string');
+  expect(generateRandomString().length).toBe(8);
+  expect(generateRandomString(6).length).toBe(6);
+  expect(generateRandomString() === generateRandomString()).toBeFalsy();
 });

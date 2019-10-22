@@ -76,3 +76,14 @@ export const getFilesUploaderErrorInfo = (
     text: texts[error]
   }));
 };
+
+export const generateRandomString = (length: number = 8): string => {
+  let t = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < length; i++) {
+    t += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return t;
+};
