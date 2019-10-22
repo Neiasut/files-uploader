@@ -1,6 +1,6 @@
 import { FilesUploaderSettings } from './interfaces/interfaces';
 import FilesUploader from './FilesUploader';
-import { mergeDeepConfig } from './functions';
+import { mergeDeepConfig } from './functions/functions';
 
 export interface Theme {
   settings?: FilesUploaderSettings;

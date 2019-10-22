@@ -6,7 +6,7 @@ import {
   FilesUploaderLoadingConstructorFn,
   FilesUploaderLoadingElement
 } from './interfaces/interfaces';
-import { calcPercentage, getFilesUploaderErrorInfo } from './functions';
+import { calcPercentage, getFilesUploaderErrorInfo } from './functions/functions';
 
 export default class LoadingComponent {
   percent = 0;

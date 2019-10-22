@@ -1,6 +1,6 @@
 import { FilesUploaderFileConstructorFn, FilesUploaderFileDataElement } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderTypeFile } from './enums/enums';
-import { formatGetParams } from './functions';
+import { formatGetParams } from './functions/functions';
 
 export default class FileComponent {
   wrapper: Element;
@@ -32,7 +32,7 @@ export default class FileComponent {
       const path = pathRemove + formatGetParams({ path: this.pathFile });
       xhr.open('DELETE', path, true);
       xhr.responseType = 'json';
-      xhr.onload = (...args) => {
+      xhr.onload = () => {
         if (xhr.status !== 200) {
           reject([FilesUploaderErrorType.Server]);
         } else {

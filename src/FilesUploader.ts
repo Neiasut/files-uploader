@@ -1,15 +1,12 @@
 import './styles/FilesUploader.scss';
+import { mergeDeepConfig, setInput, validateFileExtension, validateFileSize } from './functions/functions';
 import {
   createListElements,
   createListWrapper,
   createLoader,
   defaultFileComponentConstructorFn,
-  defaultLoadingComponentConstructorFn,
-  mergeDeepConfig,
-  setInput,
-  validateFileExtension,
-  validateFileSize
-} from './functions';
+  defaultLoadingComponentConstructorFn
+} from './functions/constructors';
 import {
   FilesUploaderAddFileToQueueEvent,
   FilesUploaderFileDataElement,
