@@ -4,7 +4,7 @@ import {
   FilesUploaderFileConstructorFn,
   FilesUploaderLoadingConstructorFn
 } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 
 export const mergeDeepConfig = (...objects) => {
   const isObject = obj => obj && typeof obj === 'object';
@@ -46,11 +46,9 @@ export const setInput = (input: HTMLInputElement, maxFiles: number, acceptTypes:
   setAcceptTypes(input, acceptTypes);
 };
 
-type typeLists = 'inProcess' | 'complete';
-
-export const createListElements = (type: typeLists): Element => {
+export const createListElements = (type: FilesUploaderTypeFile): Element => {
   const list = document.createElement('ul');
-  list.classList.add('FilesUploaderList', `FilesUploaderList_type_${type}`);
+  list.classList.add('FilesUploaderList', `FilesUploaderList_type_${FilesUploaderTypeFile[type]}`);
   return list;
 };
 
@@ -61,7 +59,7 @@ const createListTitle = (text: string): Element => {
   return title;
 };
 
-export const createListWrapper = (type: typeLists, title?: string): Element => {
+export const createListWrapper = (type: FilesUploaderTypeFile, title?: string): Element => {
   const wrapper = document.createElement('div');
   wrapper.classList.add('FilesUploader-WrapperList');
   if (title) {
@@ -126,7 +124,7 @@ export const defaultFileComponentConstructorFn: FilesUploaderFileConstructorFn =
   const root = document.createElement('div');
   root.innerHTML = `
   <span>${data.name}</span>
-  <span><button type="button">Удалить</button></span>
+  <span><button type="button">Remove</button></span>
   `;
   root.querySelector('button').addEventListener('click', onDelete);
 
@@ -152,3 +150,9 @@ export const getFilesUploaderErrorInfo = (
     text: texts[error]
   }));
 };
+/*
+export const generateEvent = (name: string, data: FilesUploaderEventData): FilesUploaderEvent => {
+  return new CustomEvent<FilesUploaderEvent>(`FilesUploader.${name}`, {
+    detail: data
+  });
+};*/

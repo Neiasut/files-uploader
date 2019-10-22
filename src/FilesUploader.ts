@@ -11,15 +11,18 @@ import {
   validateFileSize
 } from './functions';
 import {
+  FilesUploaderAddFileToQueueEvent,
   FilesUploaderFileDataElement,
   FilesUploaderListElements,
   FilesUploaderSettings
 } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import LoadingComponent from './LoadingComponent';
 import FilesUploaderQueue from './FilesUploaderQueue';
 import FilesUploaderCompleteList from './FilesUploaderCompleteList';
 import FileComponent from './FileComponent';
+import EventDispatcher, { Handler } from './EventDispatcher';
+import Themes from './Themes';
 
 export default class FilesUploader {
   elements: FilesUploaderListElements;
@@ -28,14 +31,18 @@ export default class FilesUploader {
   private queue = new FilesUploaderQueue();
   private files = new FilesUploaderCompleteList();
   private counterLoadFiles = 0;
-  constructor(query: string, settings?: FilesUploaderSettings) {
+
+  constructor(query: string, settings?: FilesUploaderSettings, themes?: string[]) {
     const input = document.querySelector(query);
+    const themesUse = Array.isArray(themes) ? themes : [];
     this.settings = settings;
-    this.setConfiguration(settings);
+    this.setConfiguration(themesUse, settings);
     this.createCarcass(input as HTMLInputElement);
     this.addListeners();
+    FilesUploader.themes.fireAfterConstructorForArrThemes(themesUse, this);
   }
 
+  static themes = new Themes();
   static get defaultSettings(): FilesUploaderSettings {
     return {
       actionLoad: '/',
@@ -77,11 +84,11 @@ export default class FilesUploader {
     wrapper.appendChild(loader);
     const wrapperLists = document.createElement('div');
     wrapperLists.classList.add('FilesUploader-WrapperLists');
-    const inProcessList = createListElements('inProcess');
-    const completeList = createListElements('complete');
-    const inProcessListWrapper = createListWrapper('inProcess', labels.inProcessList);
+    const inProcessList = createListElements(FilesUploaderTypeFile.Introduced);
+    const completeList = createListElements(FilesUploaderTypeFile.Downloaded);
+    const inProcessListWrapper = createListWrapper(FilesUploaderTypeFile.Introduced, labels.inProcessList);
     inProcessListWrapper.appendChild(inProcessList);
-    const completeListWrapper = createListWrapper('complete', labels.completeList);
+    const completeListWrapper = createListWrapper(FilesUploaderTypeFile.Downloaded, labels.completeList);
     completeListWrapper.appendChild(completeList);
     wrapperLists.appendChild(inProcessList);
     wrapperLists.appendChild(completeList);
@@ -100,11 +107,12 @@ export default class FilesUploader {
     };
   }
 
-  private setConfiguration(settings?: FilesUploaderSettings) {
+  private setConfiguration(themes: string[], settings?: FilesUploaderSettings) {
     if (typeof settings !== 'object' || settings === null) {
       settings = {};
     }
-    this.configuration = mergeDeepConfig({}, FilesUploader.defaultSettings, settings);
+    const settingsThemes = FilesUploader.themes.getConfigurationForArrThemes(themes);
+    this.configuration = mergeDeepConfig({}, FilesUploader.defaultSettings, settingsThemes, settings);
   }
 
   private addListeners() {
@@ -151,6 +159,9 @@ export default class FilesUploader {
     if (errorTypes.length > 0) {
       this.setErrorToElementQueue(element, errorTypes);
     }
+    this.fireDidAddFileToQueue({
+      instance: this
+    });
     if (autoUpload && !element.error) {
       this.uploadFile(element);
     }
@@ -190,11 +201,24 @@ export default class FilesUploader {
       data,
       this.configuration.fileComponentConstructorFn,
       () => {
-        fileInstance.delete(this.configuration.actionRemove).then(() => {
-          fileInstance.destroy();
-          this.files.remove(data.path);
-        });
+        fileInstance
+          .delete(this.configuration.actionRemove)
+          .then(() => {
+            fileInstance.destroy();
+            this.files.remove(data.path);
+          })
+          .catch(() => {
+            console.error(`File ${data.path} can't delete`);
+          });
       }
     );
+  }
+
+  private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();
+  onDidAddFileToQueue(handler: Handler<FilesUploaderAddFileToQueueEvent>) {
+    this.didAddFileToQueueDispatcher.register(handler);
+  }
+  private fireDidAddFileToQueue(event: FilesUploaderAddFileToQueueEvent) {
+    this.didAddFileToQueueDispatcher.fire(event);
   }
 }

@@ -32,8 +32,12 @@ export default class FileComponent {
       const path = pathRemove + formatGetParams({ path: this.pathFile });
       xhr.open('DELETE', path, true);
       xhr.responseType = 'json';
-      xhr.onload = () => {
-        resolve(xhr.response);
+      xhr.onload = (...args) => {
+        if (xhr.status !== 200) {
+          reject([FilesUploaderErrorType.Server]);
+        } else {
+          resolve(xhr.response);
+        }
       };
       xhr.onerror = () => {
         reject([FilesUploaderErrorType.Server]);

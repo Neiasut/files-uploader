@@ -1,5 +1,6 @@
 import { FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
 import LoadingComponent from '../LoadingComponent';
+import FilesUploader from '../FilesUploader';
 
 export interface FilesUploaderListElements {
   input: HTMLInputElement;
@@ -72,4 +73,8 @@ export interface FilesUploaderFileInfo {
 export interface FilesUploaderFileDataElement extends FilesUploaderFileInfo {
   path: string;
   externalData?: object;
+}
+
+export interface FilesUploaderAddFileToQueueEvent {
+  instance: FilesUploader;
 }
