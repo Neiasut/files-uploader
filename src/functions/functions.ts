@@ -59,14 +59,6 @@ export const calcPercentage = (upload: number, all: number, round: number = 2) =
   return +((upload / all) * 100).toFixed(round);
 };
 
-export const formatGetParams = (params: { [key: string]: string }): string => {
-  const entries = Object.entries(params);
-  if (entries.length) {
-    return '?' + entries.map(entry => `${entry[0]}=${encodeURIComponent(entry[1])}`).join('&');
-  }
-  return '';
-};
-
 export const getFilesUploaderErrorInfo = (
   errors: FilesUploaderErrorType[],
   texts: FilesUploaderErrorKeys
@@ -86,4 +78,29 @@ export const generateRandomString = (length: number = 8): string => {
   }
 
   return t;
+};
+
+export const addHeaders = (xhr: XMLHttpRequest, headers: { [key: string]: string }) => {
+  for (const [headerName, headerValue] of Object.entries(headers)) {
+    xhr.setRequestHeader(headerName, headerValue);
+  }
+};
+
+export const transformObjectToSendData: {
+  (type: 'json', initData: { [key: string]: string }, externalData: { [key: string]: string }): string;
+  (
+    type: 'multipartForm',
+    initData: { [key: string]: string | File },
+    externalData: { [key: string]: string }
+  ): FormData;
+} = (type, initData, externalData): any => {
+  const object = Object.assign({}, initData, externalData);
+  if (type === 'json') {
+    return JSON.stringify(object);
+  }
+  const form = new FormData();
+  for (const [key, value] of Object.entries<string | File>(object)) {
+    form.append(key, value);
+  }
+  return form;
 };

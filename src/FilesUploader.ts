@@ -68,7 +68,11 @@ export default class FilesUploader {
       autoUpload: false,
       loadingComponentConstructorFn: defaultLoadingComponentConstructorFn,
       fileComponentConstructorFn: defaultFileComponentConstructorFn,
-      imageView: false
+      imageView: false,
+      headersLoad: {},
+      headersRemove: {},
+      externalDataLoad: {},
+      externalDataRemove: {}
     };
   }
 
@@ -170,11 +174,11 @@ export default class FilesUploader {
   }
 
   private uploadFile(element: LoadingComponent) {
-    const { actionLoad } = this.configuration;
+    const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
     if (!element.error || element.errorTypes.includes(FilesUploaderErrorType.Server)) {
       element.setStatus(FilesUploaderStatus.Uploading);
       element
-        .upload(actionLoad)
+        .upload(actionLoad, headersLoad, externalDataLoad)
         .then(dataResponse => {
           element.setStatus(FilesUploaderStatus.Complete);
           this.removeQueueFile(element);
@@ -193,6 +197,7 @@ export default class FilesUploader {
   }
 
   addFile(data: FilesUploaderFileData) {
+    const { actionRemove, headersRemove, externalDataRemove } = this.configuration;
     const info = this.files.add(data);
     const fileInstance = new FileComponent(
       this.elements.completeList,
@@ -200,7 +205,7 @@ export default class FilesUploader {
       this.configuration.fileComponentConstructorFn,
       () => {
         fileInstance
-          .delete(this.configuration.actionRemove)
+          .delete(actionRemove, headersRemove, externalDataRemove)
           .then(() => {
             fileInstance.destroy();
             this.files.remove(info.id);

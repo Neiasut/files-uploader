@@ -1,6 +1,6 @@
 import { FilesUploaderFileConstructorFn, FilesUploaderFileDataElement } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderTypeFile } from './enums/enums';
-import { formatGetParams } from './functions/functions';
+import { addHeaders, transformObjectToSendData } from './functions/functions';
 
 export default class FileComponent {
   wrapper: Element;
@@ -27,12 +27,13 @@ export default class FileComponent {
     return root;
   }
 
-  delete(pathRemove: string) {
+  delete(pathRemove: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      const path = pathRemove + formatGetParams({ path: this.pathFile });
-      xhr.open('DELETE', path, true);
+      xhr.open('DELETE', pathRemove, true);
       xhr.responseType = 'json';
+      addHeaders(xhr, headers);
+      const info = transformObjectToSendData('json', { path: this.pathFile }, externalData);
       xhr.onload = () => {
         if (xhr.status !== 200) {
           reject([FilesUploaderErrorType.Server]);
@@ -43,7 +44,7 @@ export default class FileComponent {
       xhr.onerror = () => {
         reject([FilesUploaderErrorType.Server]);
       };
-      xhr.send();
+      xhr.send(info);
     });
   }
 

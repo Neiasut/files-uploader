@@ -33,6 +33,10 @@ export interface FilesUploaderSettings {
   statusTexts?: FilesUploaderStatusesKeys;
   errorTexts?: FilesUploaderErrorKeys;
   imageView?: boolean;
+  headersLoad?: { [key: string]: string };
+  headersRemove?: { [key: string]: string };
+  externalDataLoad?: { [key: string]: string };
+  externalDataRemove?: { [key: string]: string };
 }
 
 export interface FilesUploaderLoadingElement extends Element {

@@ -6,7 +6,12 @@ import {
   FilesUploaderLoadingConstructorFn,
   FilesUploaderLoadingElement
 } from './interfaces/interfaces';
-import { calcPercentage, getFilesUploaderErrorInfo } from './functions/functions';
+import {
+  addHeaders,
+  calcPercentage,
+  getFilesUploaderErrorInfo,
+  transformObjectToSendData
+} from './functions/functions';
 
 export default class LoadingComponent {
   percent = 0;
@@ -81,13 +86,14 @@ export default class LoadingComponent {
     }
   }
 
-  async upload(path: string) {
+  async upload(path: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
     return new Promise<FilesUploaderFileDataElement>((resolve, reject: (types: FilesUploaderErrorType[]) => void) => {
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
       xhr.open('POST', path, true);
       xhr.responseType = 'json';
       this.setStatus(FilesUploaderStatus.Uploading);
+      addHeaders(xhr, headers);
       xhr.onload = () => {
         resolve(xhr.response);
       };
@@ -102,15 +108,14 @@ export default class LoadingComponent {
         },
         false
       );
-      const dataUpload = new FormData();
-      dataUpload.append('file', this.file);
-      dataUpload.append(
-        'object',
-        JSON.stringify({
-          test: 'test'
-        })
+      const sendData = transformObjectToSendData(
+        'multipartForm',
+        {
+          file: this.file
+        },
+        externalData
       );
-      xhr.send(dataUpload);
+      xhr.send(sendData);
     });
   }
 

@@ -1,11 +1,11 @@
 import {
   calcPercentage,
-  formatGetParams,
   generateRandomString,
   getFileExtension,
   getFilesUploaderErrorInfo,
   mergeDeepConfig,
   setInput,
+  transformObjectToSendData,
   validateFileExtension,
   validateFileSize
 } from './functions';
@@ -74,12 +74,6 @@ test('calcPercentage', () => {
   expect(calcPercentage(1, 3, 3)).toBe(33.333);
 });
 
-test('formatGetParams', () => {
-  expect(formatGetParams({ a: '1', b: 'test' })).toBe('?a=1&b=test');
-  expect(formatGetParams({ a: 'test', b: null })).toBe('?a=test&b=null');
-  expect(formatGetParams({})).toBe('');
-});
-
 test('getFilesUploaderErrorInfo', () => {
   const texts = mockFilesUploaderErrorKeys();
   expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)).toBeInstanceOf(Object);
@@ -95,4 +89,22 @@ test('generateRandomString', () => {
   expect(generateRandomString().length).toBe(8);
   expect(generateRandomString(6).length).toBe(6);
   expect(generateRandomString() === generateRandomString()).toBeFalsy();
+});
+
+test('addHeaders', () => {
+  expect(true).toBeTruthy();
+});
+
+test('transformObjectToSendData', () => {
+  const result1 = transformObjectToSendData('json', {}, {});
+  expect(typeof result1).toBe('string');
+  const result2 = transformObjectToSendData(
+    'multipartForm',
+    {
+      file: mockDefaultFile()
+    },
+    {}
+  );
+  expect(result2).toBeInstanceOf(FormData);
+  expect(result2.get('file')).toBeInstanceOf(File);
 });
