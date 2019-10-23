@@ -10,14 +10,14 @@ export interface Theme {
 export default class Themes {
   private list: Map<string, Theme> = new Map();
 
-  addTheme(nameTheme: string, theme: Theme) {
+  add(nameTheme: string, theme: Theme) {
     if (this.list.has(nameTheme)) {
       throw new Error(`Theme with name "${nameTheme}" already exist!`);
     }
     this.list.set(nameTheme, theme);
   }
 
-  getTheme(nameTheme: string): Theme {
+  get(nameTheme: string): Theme {
     if (!this.list.has(nameTheme)) {
       throw new Error(`Theme with name "${nameTheme}" does not exist!`);
     }
@@ -25,7 +25,7 @@ export default class Themes {
   }
 
   fireAfterConstructor(nameTheme: string, instance: FilesUploader) {
-    const { afterConstructor, settings } = this.getTheme(nameTheme);
+    const { afterConstructor, settings } = this.get(nameTheme);
     if (typeof afterConstructor === 'function') {
       afterConstructor(instance, settings);
     }
@@ -39,7 +39,7 @@ export default class Themes {
 
   getConfigurationForArrThemes(arrNames: string[]): FilesUploaderSettings {
     const arrThemesSettings = arrNames.map(nameTheme => {
-      const themeSettings = this.getTheme(nameTheme).settings;
+      const themeSettings = this.get(nameTheme).settings;
       return themeSettings ? themeSettings : {};
     });
     return mergeDeepConfig({}, ...arrThemesSettings);

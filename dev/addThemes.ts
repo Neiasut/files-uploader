@@ -1,6 +1,6 @@
 import FilesUploader from '../src/FilesUploader';
 
-FilesUploader.themes.addTheme('testSettings', {
+FilesUploader.themes.add('testSettings', {
   settings: {
     acceptTypes: ['exe', 'jpg'],
     maxSize: 6 * 1204 * 1024,
@@ -11,7 +11,7 @@ FilesUploader.themes.addTheme('testSettings', {
   }
 });
 
-FilesUploader.themes.addTheme('test', {
+FilesUploader.themes.add('test', {
   afterConstructor(instanceTheme, settings) {
     instanceTheme.onDidAddFileToQueue(() => {
       console.log('theme test on add file to queue!');
@@ -20,7 +20,7 @@ FilesUploader.themes.addTheme('test', {
   }
 });
 
-FilesUploader.themes.addTheme('test2', {
+FilesUploader.themes.add('test2', {
   afterConstructor(instanceTheme) {
     instanceTheme.onDidAddFileToQueue(() => {
       console.log('theme test2 on add file to queue!');

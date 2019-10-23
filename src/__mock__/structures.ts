@@ -1,5 +1,11 @@
 import { FilesUploaderErrorType } from '../enums/enums';
-import { FilesUploaderErrorKeys, FilesUploaderFileData, FilesUploaderFileDataElement } from '../interfaces/interfaces';
+import {
+  FilesUploaderErrorKeys,
+  FilesUploaderFileData,
+  FilesUploaderFileDataElement,
+  FilesUploaderSettings
+} from '../interfaces/interfaces';
+import FilesUploader from '../FilesUploader';
 
 export const mockFilesUploaderErrorKeys = (): FilesUploaderErrorKeys => ({
   [FilesUploaderErrorType.Server]: 'some text',
@@ -28,3 +34,14 @@ export const mockFilesUploaderFileData = (): FilesUploaderFileData => ({
   size: 4,
   extension: 'txt'
 });
+
+export const mockInstanceFilesUploader = (
+  settings: FilesUploaderSettings = {},
+  themes: string[] = []
+): FilesUploader => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.id = 'test';
+  document.body.appendChild(input);
+  return new FilesUploader('#test', settings, themes);
+};
