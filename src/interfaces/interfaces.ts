@@ -1,5 +1,4 @@
 import { FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
-import LoadingComponent from '../LoadingComponent';
 import FilesUploader from '../FilesUploader';
 
 export interface FilesUploaderListElements {
@@ -37,10 +36,6 @@ export interface FilesUploaderSettings {
   headersRemove?: { [key: string]: string };
   externalDataLoad?: { [key: string]: string };
   externalDataRemove?: { [key: string]: string };
-}
-
-export interface FilesUploaderLoadingElement extends Element {
-  filesUploaderLoadingElement?: LoadingComponent;
 }
 
 export type FilesUploaderLoadingConstructorFn = (

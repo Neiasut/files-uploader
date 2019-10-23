@@ -3,8 +3,7 @@ import {
   FilesUploaderErrorInfo,
   FilesUploaderErrorKeys,
   FilesUploaderFileDataElement,
-  FilesUploaderLoadingConstructorFn,
-  FilesUploaderLoadingElement
+  FilesUploaderLoadingConstructorFn
 } from './interfaces/interfaces';
 import {
   addHeaders,
@@ -53,7 +52,7 @@ export default class LoadingComponent {
     return this.errorTypes.length > 0;
   }
 
-  protected getWrapper(numb: number): FilesUploaderLoadingElement {
+  protected getWrapper(numb: number): Element {
     const root = document.createElement('li');
     root.setAttribute('data-index', numb.toString());
     root.setAttribute('data-file-type', FilesUploaderTypeFile.Introduced);
