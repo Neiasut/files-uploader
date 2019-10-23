@@ -6,6 +6,8 @@ import {
   FilesUploaderSettings
 } from '../interfaces/interfaces';
 import FilesUploader from '../FilesUploader';
+import LoadingComponent from '../LoadingComponent';
+import {defaultLoadingComponentConstructorFn} from '../functions/constructors';
 
 export const mockFilesUploaderErrorKeys = (): FilesUploaderErrorKeys => ({
   [FilesUploaderErrorType.Server]: 'some text',
@@ -44,4 +46,10 @@ export const mockInstanceFilesUploader = (
   input.id = 'test';
   document.body.appendChild(input);
   return new FilesUploader('#test', settings, themes);
+};
+
+export const mockLoadingComponent = (numb = 0): LoadingComponent => {
+  const div = document.createElement('div');
+  document.body.appendChild(div);
+  return new LoadingComponent(div, numb, mockDefaultFile(), defaultLoadingComponentConstructorFn, () => 0, () => 0);
 };
