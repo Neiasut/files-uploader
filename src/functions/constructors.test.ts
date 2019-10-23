@@ -80,10 +80,20 @@ test('defaultLoadingComponentConstructorFn', () => {
 
 test('defaultFileComponentConstructorFn', () => {
   let a = 0;
-  const result = defaultFileComponentConstructorFn(mockFilesUploaderFileDataElement(), () => {
-    a += 1;
-  });
+  const result = defaultFileComponentConstructorFn(
+    mockFilesUploaderFileDataElement(),
+    () => {
+      a += 1;
+    },
+    false
+  );
   expect(result.elementDOM).toBeInstanceOf(Element);
   result.elementDOM.querySelector('button').dispatchEvent(new Event('click'));
   expect(a).toBe(1);
+});
+
+test('defaultFileComponentConstructorFn with image', () => {
+  const result = defaultFileComponentConstructorFn(mockFilesUploaderFileDataElement(), () => 0, true);
+  expect(result.elementDOM).toBeInstanceOf(Element);
+  expect(result.elementDOM.querySelector('.image')).not.toBe(null);
 });

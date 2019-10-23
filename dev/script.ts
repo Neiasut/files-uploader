@@ -13,7 +13,8 @@ const instance2 = new FilesUploader(
   '#exampleImage',
   {
     acceptTypes: ['png', 'jpg'],
-    autoUpload: true
+    autoUpload: true,
+    imageView: true
   },
   ['testSettings']
 );

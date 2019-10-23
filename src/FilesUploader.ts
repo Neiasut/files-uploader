@@ -67,7 +67,8 @@ export default class FilesUploader {
       maxParallelUploads: 3,
       autoUpload: false,
       loadingComponentConstructorFn: defaultLoadingComponentConstructorFn,
-      fileComponentConstructorFn: defaultFileComponentConstructorFn
+      fileComponentConstructorFn: defaultFileComponentConstructorFn,
+      imageView: false
     };
   }
 
@@ -207,7 +208,8 @@ export default class FilesUploader {
           .catch(() => {
             console.error(`File ${data.path} can't delete`);
           });
-      }
+      },
+      this.configuration.imageView
     );
   }
 

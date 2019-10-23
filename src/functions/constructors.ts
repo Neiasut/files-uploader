@@ -64,11 +64,12 @@ export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstruct
   };
 };
 
-export const defaultFileComponentConstructorFn: FilesUploaderFileConstructorFn = (data, onDelete) => {
+export const defaultFileComponentConstructorFn: FilesUploaderFileConstructorFn = (data, onDelete, imageView) => {
   const root = document.createElement('div');
   root.innerHTML = `
-  <span>${data.name}</span>
-  <span><button type="button">Remove</button></span>
+    ${imageView ? `<span class="imageWrapper"><img class="image" src="${data.path}" alt="download image" /></span>` : ''}
+    <span>${data.name}</span>
+    <span><button type="button">Remove</button></span>
   `;
   root.querySelector('button').addEventListener('click', onDelete);
 

@@ -32,6 +32,7 @@ export interface FilesUploaderSettings {
   labels?: FilesUploaderLabels;
   statusTexts?: FilesUploaderStatusesKeys;
   errorTexts?: FilesUploaderErrorKeys;
+  imageView?: boolean;
 }
 
 export interface FilesUploaderLoadingElement extends Element {
@@ -59,7 +60,8 @@ export interface FilesUploaderErrorInfo {
 
 export type FilesUploaderFileConstructorFn = (
   data: FilesUploaderFileDataElement,
-  onDelete: () => void
+  onDelete: () => void,
+  imageView: boolean
 ) => {
   elementDOM: Element;
 };

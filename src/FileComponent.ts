@@ -10,9 +10,10 @@ export default class FileComponent {
     insertionPoint: Element,
     data: FilesUploaderFileDataElement,
     constructorFn: FilesUploaderFileConstructorFn,
-    onDelete: any
+    onDelete: () => void,
+    imageView: boolean
   ) {
-    const result = constructorFn(data, onDelete);
+    const result = constructorFn(data, onDelete, imageView);
     const wrapper = this.getWrapper();
     wrapper.appendChild(result.elementDOM);
     insertionPoint.appendChild(wrapper);
