@@ -197,12 +197,16 @@ export default class FilesUploader {
   }
 
   addFile(data: FilesUploaderFileData) {
-    const { actionRemove, headersRemove, externalDataRemove } = this.configuration;
+    const {
+      actionRemove,
+      headersRemove,
+      externalDataRemove,
+      fileComponentConstructorFn,
+      imageView
+    } = this.configuration;
     const info = this.files.add(data);
-    const fileInstance = new FileComponent(
-      this.elements.completeList,
+    const renderFile = fileComponentConstructorFn(
       info,
-      this.configuration.fileComponentConstructorFn,
       () => {
         fileInstance
           .delete(actionRemove, headersRemove, externalDataRemove)
@@ -214,8 +218,9 @@ export default class FilesUploader {
             console.error(`File ${data.path} can't delete`);
           });
       },
-      this.configuration.imageView
+      imageView
     );
+    const fileInstance = new FileComponent(data.path, this.elements.completeList, renderFile);
   }
 
   private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();

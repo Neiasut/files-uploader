@@ -61,9 +61,12 @@ export type FilesUploaderFileConstructorFn = (
   data: FilesUploaderFileDataElement,
   onDelete: () => void,
   imageView: boolean
-) => {
+) => FilesUploaderFileConstructorFnResult;
+
+export interface FilesUploaderFileConstructorFnResult {
   elementDOM: Element;
-};
+  onDestroy?: () => void;
+}
 
 export interface FilesUploaderFileInfo {
   readonly name: string;

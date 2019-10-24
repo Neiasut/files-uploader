@@ -1,24 +1,18 @@
-import { FilesUploaderFileConstructorFn, FilesUploaderFileDataElement } from './interfaces/interfaces';
+import { FilesUploaderFileConstructorFnResult } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderTypeFile } from './enums/enums';
 import { addHeaders, transformObjectToSendData } from './functions/functions';
 
 export default class FileComponent {
   wrapper: Element;
   pathFile: string;
-  data: FilesUploaderFileDataElement;
-  constructor(
-    insertionPoint: Element,
-    data: FilesUploaderFileDataElement,
-    constructorFn: FilesUploaderFileConstructorFn,
-    onDelete: () => void,
-    imageView: boolean
-  ) {
-    const result = constructorFn(data, onDelete, imageView);
+  readonly onDestroy: () => void;
+  constructor(pathFile: string, insertionPoint: Element, constructionData: FilesUploaderFileConstructorFnResult) {
     const wrapper = this.getWrapper();
-    wrapper.appendChild(result.elementDOM);
+    wrapper.appendChild(constructionData.elementDOM);
     insertionPoint.appendChild(wrapper);
     this.wrapper = wrapper;
-    this.pathFile = data.path;
+    this.pathFile = pathFile;
+    this.onDestroy = constructionData.onDestroy;
   }
 
   protected getWrapper(): Element {
@@ -27,7 +21,11 @@ export default class FileComponent {
     return root;
   }
 
-  delete(pathRemove: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
+  delete(
+    pathRemove: string,
+    headers: { [key: string]: string },
+    externalData: { [key: string]: string }
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('DELETE', pathRemove, true);
@@ -41,14 +39,14 @@ export default class FileComponent {
           resolve(xhr.response);
         }
       };
-      xhr.onerror = () => {
-        reject([FilesUploaderErrorType.Server]);
-      };
       xhr.send(info);
     });
   }
 
   destroy() {
+    if (this.onDestroy) {
+      this.onDestroy();
+    }
     this.wrapper.remove();
   }
 }
