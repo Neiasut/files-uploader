@@ -219,6 +219,9 @@ export default class FilesUploader {
       imageView
     );
     const fileInstance = new FileComponent(data.path, this.elements.completeList, renderFile);
+    this.fireDidAddFile({
+      instance: this
+    });
   }
 
   private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();
@@ -227,5 +230,13 @@ export default class FilesUploader {
   }
   private fireDidAddFileToQueue(event: FilesUploaderAddFileToQueueEvent) {
     this.didAddFileToQueueDispatcher.fire(event);
+  }
+
+  private didAddFileDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();
+  onDidAddFile(handler: Handler<FilesUploaderAddFileToQueueEvent>) {
+    this.didAddFileDispatcher.register(handler);
+  }
+  private fireDidAddFile(event: FilesUploaderAddFileToQueueEvent) {
+    this.didAddFileDispatcher.fire(event);
   }
 }

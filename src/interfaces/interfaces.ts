@@ -87,6 +87,10 @@ export interface FilesUploaderAddFileToQueueEvent {
   instance: FilesUploader;
 }
 
+export interface FilesUploaderAddFileEvent {
+  instance: FilesUploader;
+}
+
 export interface FilesUploaderFileData extends FilesUploaderFileInfo {
   path: string;
   externalData?: object;

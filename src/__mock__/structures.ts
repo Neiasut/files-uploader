@@ -32,7 +32,12 @@ export const mockFilesUploaderErrorKeys = (): FilesUploaderErrorKeys => ({
 });
 
 export const mockDefaultFile = (): File => {
-  return new File(['test'], 'foo.txt', {
+  const parts = [
+    new Blob(['you construct a file...'], { type: 'text/plain' }),
+    ' Same way as you do with blob',
+    new Uint16Array([33])
+  ];
+  return new File(parts, 'foo.txt', {
     type: 'text/plain'
   });
 };
