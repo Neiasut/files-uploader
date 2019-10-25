@@ -42,12 +42,15 @@ export type FilesUploaderLoadingConstructorFn = (
   file: File,
   onUpload: () => void,
   onCancel: () => void
-) => {
+) => FilesUploaderLoadingConstructorFnResult;
+
+export interface FilesUploaderLoadingConstructorFnResult {
   elementDOM: Element;
   onChangeStatus?: (status: FilesUploaderStatus) => void;
   onChangePercent?: (percent: number) => void;
   onError?: (errorTexts: FilesUploaderErrorInfo[]) => void;
-};
+  onDestroy?: () => void;
+}
 
 export type FilesUploaderStatusesKeys = Record<FilesUploaderStatus, string>;
 export type FilesUploaderErrorKeys = Record<FilesUploaderErrorType, string>;

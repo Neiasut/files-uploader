@@ -135,11 +135,8 @@ export default class FilesUploader {
     const { maxSize, acceptTypes, maxFiles, loadingComponentConstructorFn, autoUpload } = this.configuration;
     this.counterLoadFiles += 1;
 
-    const element = new LoadingComponent(
-      this.elements.inProcessList,
-      this.counterLoadFiles,
+    const loadingElement = loadingComponentConstructorFn(
       file,
-      loadingComponentConstructorFn,
       () => {
         this.uploadFile(element);
       },
@@ -147,6 +144,7 @@ export default class FilesUploader {
         this.removeQueueFile(element);
       }
     );
+    const element = new LoadingComponent(this.elements.inProcessList, this.counterLoadFiles, file, loadingElement);
     this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
     if (!validateFileSize(file, maxSize)) {

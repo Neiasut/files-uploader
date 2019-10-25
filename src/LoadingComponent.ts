@@ -3,7 +3,7 @@ import {
   FilesUploaderErrorInfo,
   FilesUploaderErrorKeys,
   FilesUploaderFileDataElement,
-  FilesUploaderLoadingConstructorFn
+  FilesUploaderLoadingConstructorFnResult
 } from './interfaces/interfaces';
 import {
   addHeaders,
@@ -15,34 +15,25 @@ import {
 export default class LoadingComponent {
   percent = 0;
   wrapper: Element;
-  protected onChangePercent: (percent: number) => void | null;
-  protected onChangeStatus: (status: FilesUploaderStatus) => void | null;
-  protected onError: (errors: FilesUploaderErrorInfo[]) => void | null;
+  protected onChangePercent?: (percent: number) => void;
+  protected onChangeStatus?: (status: FilesUploaderStatus) => void;
+  protected onError?: (errors: FilesUploaderErrorInfo[]) => void;
+  protected onDestroy?: () => void;
   xhr: XMLHttpRequest | null = null;
   status: FilesUploaderStatus;
   errorTypes: FilesUploaderErrorType[] = [];
   readonly file: File;
   readonly numb: number;
 
-  constructor(
-    insertionPoint: Element,
-    numb: number,
-    file: File,
-    constructorFn: FilesUploaderLoadingConstructorFn,
-    onUpload: () => void,
-    onCancel: () => void
-  ) {
+  constructor(insertionPoint: Element, numb: number, file: File, info: FilesUploaderLoadingConstructorFnResult) {
     this.numb = numb;
     this.file = file;
-    const dataFromConstructorFn = constructorFn(file, onUpload, onCancel);
     const wrapper = this.getWrapper(numb);
-    wrapper.appendChild(dataFromConstructorFn.elementDOM);
-    const onChangePercent = dataFromConstructorFn.onChangePercent;
-    this.onChangePercent = typeof onChangePercent === 'function' ? onChangePercent : null;
-    const onChangeStatus = dataFromConstructorFn.onChangeStatus;
-    this.onChangeStatus = typeof onChangeStatus === 'function' ? onChangeStatus : null;
-    const onError = dataFromConstructorFn.onError;
-    this.onError = typeof onError === 'function' ? onError : null;
+    wrapper.appendChild(info.elementDOM);
+    this.onChangePercent = info.onChangePercent;
+    this.onChangeStatus = info.onChangeStatus;
+    this.onError = info.onError;
+    this.onDestroy = info.onDestroy;
     insertionPoint.appendChild(wrapper);
     this.wrapper = wrapper;
     this.setStatus(FilesUploaderStatus.WaitUpload);
@@ -61,7 +52,7 @@ export default class LoadingComponent {
 
   changePercent(percent: number) {
     this.percent = percent;
-    if (this.onChangePercent !== null) {
+    if (this.onChangePercent) {
       this.onChangePercent(percent);
     }
   }
@@ -72,7 +63,7 @@ export default class LoadingComponent {
     if (status !== FilesUploaderStatus.Error) {
       this.errorTypes = [];
     }
-    if (this.onChangeStatus !== null) {
+    if (this.onChangeStatus) {
       this.onChangeStatus(status);
     }
   }
@@ -80,7 +71,7 @@ export default class LoadingComponent {
   setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void {
     this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
-    if (this.onError !== null) {
+    if (this.onError) {
       this.onError(getFilesUploaderErrorInfo(errors, listTextErrors));
     }
   }
@@ -94,10 +85,11 @@ export default class LoadingComponent {
       this.setStatus(FilesUploaderStatus.Uploading);
       addHeaders(xhr, headers);
       xhr.onload = () => {
-        resolve(xhr.response);
-      };
-      xhr.onerror = () => {
-        reject([FilesUploaderErrorType.Server]);
+        if (xhr.status === 200) {
+          resolve(xhr.response);
+        } else {
+          reject([FilesUploaderErrorType.Server]);
+        }
       };
       xhr.upload.addEventListener(
         'progress',
@@ -119,13 +111,13 @@ export default class LoadingComponent {
   }
 
   abort() {
-    if (this.xhr !== null) {
-      this.xhr.abort();
-    }
-    this.xhr = null;
+    this.xhr.abort();
   }
 
   destroy() {
+    if (this.onDestroy) {
+      this.onDestroy();
+    }
     this.wrapper.remove();
   }
 }

@@ -45,8 +45,10 @@ export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstruct
   </span>
   `;
   const percentage = root.querySelector('.percentage');
-  root.querySelector('.upload').addEventListener('click', onUpload);
-  root.querySelector('.cancel').addEventListener('click', onCancel);
+  const buttonUpload = root.querySelector('.upload');
+  buttonUpload.addEventListener('click', onUpload);
+  const buttonCancel = root.querySelector('.cancel');
+  buttonCancel.addEventListener('click', onCancel);
   const errors = root.querySelector('.errors');
   return {
     elementDOM: root,
@@ -60,6 +62,10 @@ export const defaultLoadingComponentConstructorFn: FilesUploaderLoadingConstruct
     },
     onError: errorTexts => {
       errors.textContent = errorTexts.map(info => info.text).join(', ');
+    },
+    onDestroy: () => {
+      buttonUpload.removeEventListener('click', onUpload);
+      buttonCancel.removeEventListener('click', onCancel);
     }
   };
 };
