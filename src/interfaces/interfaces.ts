@@ -26,8 +26,8 @@ export interface FilesUploaderSettings {
   acceptTypes?: string[];
   maxParallelUploads?: number;
   autoUpload?: boolean;
-  loadingComponentConstructorFn?: (data: FilesUploaderFileInfo) => LoadingFileComponent;
-  fileComponentConstructorFn?: (data: FilesUploaderFileDataElement, imageView: boolean) => CompleteFileComponent;
+  factoryUploadingComponent?: (data: FilesUploaderFileInfo) => LoadingFileComponent;
+  factoryCompleteComponent?: (data: FilesUploaderFileDataElement, imageView: boolean) => CompleteFileComponent;
   labels?: FilesUploaderLabels;
   statusTexts?: FilesUploaderStatusesKeys;
   errorTexts?: FilesUploaderErrorKeys;

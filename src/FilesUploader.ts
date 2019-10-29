@@ -69,8 +69,8 @@ export default class FilesUploader {
       maxSize: 10 * 1024 * 1024,
       maxParallelUploads: 3,
       autoUpload: false,
-      loadingComponentConstructorFn: factoryDefaultUploadingComponent,
-      fileComponentConstructorFn: factoryDefaultCompleteComponent,
+      factoryUploadingComponent: factoryDefaultUploadingComponent,
+      factoryCompleteComponent: factoryDefaultCompleteComponent,
       imageView: false,
       headersLoad: {},
       headersRemove: {},
@@ -135,9 +135,9 @@ export default class FilesUploader {
   }
 
   private addFileToQueue(file: File) {
-    const { maxSize, acceptTypes, maxFiles, loadingComponentConstructorFn, autoUpload } = this.configuration;
+    const { maxSize, acceptTypes, maxFiles, factoryUploadingComponent, autoUpload } = this.configuration;
     this.counterLoadFiles += 1;
-    const loadingComponent = loadingComponentConstructorFn(getFilesUploaderFileInfoFromInstanceFile(file));
+    const loadingComponent = factoryUploadingComponent(getFilesUploaderFileInfoFromInstanceFile(file));
     loadingComponent.onDidCallUpload(() => {
       this.uploadFile(element);
     });
@@ -194,15 +194,9 @@ export default class FilesUploader {
   }
 
   addFile(data: FilesUploaderFileData) {
-    const {
-      actionRemove,
-      headersRemove,
-      externalDataRemove,
-      fileComponentConstructorFn,
-      imageView
-    } = this.configuration;
+    const { actionRemove, headersRemove, externalDataRemove, factoryCompleteComponent, imageView } = this.configuration;
     const info = this.files.add(data);
-    const fileCompleteComponent = fileComponentConstructorFn(info, imageView);
+    const fileCompleteComponent = factoryCompleteComponent(info, imageView);
     const fileInstance = new CompleteElement(data.path, this.elements.completeList, fileCompleteComponent);
     fileCompleteComponent.onDidCallRemove(() => {
       fileInstance
