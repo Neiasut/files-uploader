@@ -1,4 +1,4 @@
-import LoadingComponent from './LoadingComponent';
+import UploadingElement from './UploadingElement';
 import {
   mockDefaultDiv,
   mockDefaultFile,
@@ -9,65 +9,31 @@ import { FilesUploaderErrorType } from './enums/enums';
 // @ts-ignore
 import mock from 'xhr-mock';
 import { FilesUploaderFileData } from './interfaces/interfaces';
+import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
+import { getFilesUploaderFileInfoFromInstanceFile } from './functions/functions';
+
+const getDefaultViewComponent = (file: File) =>
+  factoryDefaultUploadingComponent(getFilesUploaderFileInfoFromInstanceFile(file));
 
 test('check init', () => {
   const instance = mockLoadingComponent();
   expect(instance.error).toBeFalsy();
   expect(instance.errorTypes.length).toBe(0);
-  expect(instance).toBeInstanceOf(LoadingComponent);
+  expect(instance).toBeInstanceOf(UploadingElement);
 });
 
 test('onChangePercent', () => {
   const file = mockDefaultFile();
-  const element = mockDefaultDiv();
-  const onChangePercent = jest.fn();
-  const instance = new LoadingComponent(document.body, 0, file, {
-    elementDOM: element,
-    onChangePercent
-  });
+  const component = getDefaultViewComponent(file);
+  const instance = new UploadingElement(document.body, 0, file, component);
   instance.changePercent(25);
   expect(instance.percent).toBe(25);
-  expect(onChangePercent).toHaveBeenCalledTimes(1);
-});
-
-test('onChangePercent without callback', () => {
-  const div = document.createElement('div');
-  document.body.appendChild(div);
-  const file = mockDefaultFile();
-  const element = document.createElement('div');
-  const instance = new LoadingComponent(document.body, 0, file, {
-    elementDOM: element
-  });
-  instance.changePercent(25);
 });
 
 test('setError', () => {
   const file = mockDefaultFile();
-  const element = mockDefaultDiv();
-  const onError = jest.fn();
-  const instance = new LoadingComponent(document.body, 0, file, {
-    elementDOM: element,
-    onError
-  });
-  instance.setError([FilesUploaderErrorType.Server], mockFilesUploaderErrorKeys());
-  expect(instance.error).toBe(true);
-  expect(instance.errorTypes.length).toBe(1);
-  expect(instance.errorTypes[0]).toBe(FilesUploaderErrorType.Server);
-  expect(onError).toHaveBeenCalledTimes(1);
-  expect(onError).toHaveBeenCalledWith([
-    {
-      type: FilesUploaderErrorType.Server,
-      text: mockFilesUploaderErrorKeys()[FilesUploaderErrorType.Server]
-    }
-  ]);
-});
-
-test('setError without callback', () => {
-  const file = mockDefaultFile();
-  const element = mockDefaultDiv();
-  const instance = new LoadingComponent(document.body, 0, file, {
-    elementDOM: element
-  });
+  const component = getDefaultViewComponent(file);
+  const instance = new UploadingElement(document.body, 0, file, component);
   instance.setError([FilesUploaderErrorType.Server], mockFilesUploaderErrorKeys());
   expect(instance.error).toBe(true);
   expect(instance.errorTypes.length).toBe(1);
@@ -99,10 +65,8 @@ describe('async tests', () => {
       return response.status(200).body(JSON.stringify(data));
     });
     const file = mockDefaultFile();
-    const element = mockDefaultDiv();
-    const instance = new LoadingComponent(document.body, 0, file, {
-      elementDOM: element
-    });
+    const component = getDefaultViewComponent(file);
+    const instance = new UploadingElement(document.body, 0, file, component);
     const dataResponse = await instance.upload(
       '/test',
       {
@@ -121,10 +85,8 @@ describe('async tests', () => {
       return response.status(412).body(JSON.stringify({}));
     });
     const file = mockDefaultFile();
-    const element = mockDefaultDiv();
-    const instance = new LoadingComponent(document.body, 0, file, {
-      elementDOM: element
-    });
+    const component = getDefaultViewComponent(file);
+    const instance = new UploadingElement(document.body, 0, file, component);
     try {
       await instance.upload('/test', {}, {});
     } catch (e) {
@@ -143,10 +105,8 @@ describe('async tests', () => {
       3000
     );
     const file = mockDefaultFile();
-    const element = mockDefaultDiv();
-    const instance = new LoadingComponent(document.body, 0, file, {
-      elementDOM: element
-    });
+    const component = getDefaultViewComponent(file);
+    const instance = new UploadingElement(document.body, 0, file, component);
     try {
       instance.upload('/test', {}, {});
       instance.abort();
@@ -158,25 +118,9 @@ describe('async tests', () => {
 
 test('destroy', () => {
   const file = mockDefaultFile();
-  const element = mockDefaultDiv();
+  const component = getDefaultViewComponent(file);
   const div = mockDefaultDiv();
-  const instance = new LoadingComponent(div, 0, file, {
-    elementDOM: element
-  });
+  const instance = new UploadingElement(div, 0, file, component);
   instance.destroy();
   expect(div.childNodes.length).toBe(0);
-});
-
-test('destroy with callback', () => {
-  const file = mockDefaultFile();
-  const element = mockDefaultDiv();
-  const div = mockDefaultDiv();
-  const onDestroy = jest.fn();
-  const instance = new LoadingComponent(div, 0, file, {
-    elementDOM: element,
-    onDestroy
-  });
-  instance.destroy();
-  expect(div.childNodes.length).toBe(0);
-  expect(onDestroy).toHaveBeenCalledTimes(1);
 });

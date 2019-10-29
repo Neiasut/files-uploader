@@ -3,12 +3,12 @@ import {
   FilesUploaderErrorKeys,
   FilesUploaderFileData,
   FilesUploaderFileDataElement,
-  FilesUploaderLoadingConstructorFnResult,
   FilesUploaderSettings
 } from '../interfaces/interfaces';
 import FilesUploader from '../FilesUploader';
-import LoadingComponent from '../LoadingComponent';
-import { defaultLoadingComponentConstructorFn } from '../functions/constructors';
+import UploadingElement from '../UploadingElement';
+import { factoryDefaultUploadingComponent } from '../DefaultUploadingComponent';
+import { getFilesUploaderFileInfoFromInstanceFile } from '../functions/functions';
 
 export const mockDefaultInput = (): HTMLInputElement => {
   const input = document.createElement('input');
@@ -65,10 +65,8 @@ export const mockInstanceFilesUploader = (
   return new FilesUploader('#test', settings, themes);
 };
 
-export const mockLoadingComponent = (numb = 0, data?: FilesUploaderLoadingConstructorFnResult): LoadingComponent => {
+export const mockLoadingComponent = (numb = 0): UploadingElement => {
   const file = mockDefaultFile();
-  if (!data) {
-    data = defaultLoadingComponentConstructorFn(file, () => null, () => null);
-  }
-  return new LoadingComponent(document.body, numb, file, data);
+  const instance = factoryDefaultUploadingComponent(getFilesUploaderFileInfoFromInstanceFile(file));
+  return new UploadingElement(document.body, numb, file, instance);
 };

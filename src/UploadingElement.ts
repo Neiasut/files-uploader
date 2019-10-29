@@ -1,9 +1,9 @@
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import {
-  FilesUploaderErrorInfo,
+  FilesUploaderElement,
   FilesUploaderErrorKeys,
   FilesUploaderFileDataElement,
-  FilesUploaderLoadingConstructorFnResult
+  LoadingFileComponent
 } from './interfaces/interfaces';
 import {
   addHeaders,
@@ -12,28 +12,22 @@ import {
   transformObjectToSendData
 } from './functions/functions';
 
-export default class LoadingComponent {
+export default class UploadingElement implements FilesUploaderElement {
   percent = 0;
   wrapper: Element;
-  protected onChangePercent?: (percent: number) => void;
-  protected onChangeStatus?: (status: FilesUploaderStatus) => void;
-  protected onError?: (errors: FilesUploaderErrorInfo[]) => void;
-  protected onDestroy?: () => void;
   xhr: XMLHttpRequest | null = null;
   status: FilesUploaderStatus;
   errorTypes: FilesUploaderErrorType[] = [];
   readonly file: File;
   readonly numb: number;
+  component: LoadingFileComponent;
 
-  constructor(insertionPoint: Element, numb: number, file: File, info: FilesUploaderLoadingConstructorFnResult) {
+  constructor(insertionPoint: Element, numb: number, file: File, component: LoadingFileComponent) {
     this.numb = numb;
     this.file = file;
+    this.component = component;
     const wrapper = this.getWrapper(numb);
-    wrapper.appendChild(info.elementDOM);
-    this.onChangePercent = info.onChangePercent;
-    this.onChangeStatus = info.onChangeStatus;
-    this.onError = info.onError;
-    this.onDestroy = info.onDestroy;
+    wrapper.appendChild(component.render());
     insertionPoint.appendChild(wrapper);
     this.wrapper = wrapper;
     this.setStatus(FilesUploaderStatus.WaitUpload);
@@ -46,34 +40,30 @@ export default class LoadingComponent {
   protected getWrapper(numb: number): Element {
     const root = document.createElement('li');
     root.setAttribute('data-index', numb.toString());
-    root.setAttribute('data-file-type', FilesUploaderTypeFile.Introduced);
+    root.setAttribute('data-file-type', FilesUploaderTypeFile.Uploading);
     return root;
   }
 
   changePercent(percent: number) {
     this.percent = percent;
-    if (this.onChangePercent) {
-      this.onChangePercent(percent);
+    if (this.component.changePercent) {
+      this.component.changePercent(percent);
     }
   }
 
-  setStatus(status: FilesUploaderStatus) {
+  setStatus(status: FilesUploaderStatus.WaitUpload | FilesUploaderStatus.Uploading | FilesUploaderStatus.Error) {
     this.wrapper.setAttribute('data-file-status', status);
     this.status = status;
     if (status !== FilesUploaderStatus.Error) {
       this.errorTypes = [];
     }
-    if (this.onChangeStatus) {
-      this.onChangeStatus(status);
-    }
+    this.component.setStatus(status);
   }
 
   setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void {
     this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
-    if (this.onError) {
-      this.onError(getFilesUploaderErrorInfo(errors, listTextErrors));
-    }
+    this.component.setError(getFilesUploaderErrorInfo(errors, listTextErrors));
   }
 
   async upload(path: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
@@ -111,13 +101,13 @@ export default class LoadingComponent {
   }
 
   abort() {
-    this.xhr.abort();
+    if (this.xhr instanceof XMLHttpRequest) {
+      this.xhr.abort();
+    }
   }
 
   destroy() {
-    if (this.onDestroy) {
-      this.onDestroy();
-    }
+    this.component.destroy();
     this.wrapper.remove();
   }
 }

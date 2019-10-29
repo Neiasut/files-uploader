@@ -1,25 +1,28 @@
 import './styles/FilesUploader.scss';
-import { mergeDeepConfig, setInput, validateFileExtension, validateFileSize } from './functions/functions';
 import {
-  createListElements,
-  createListWrapper,
-  createLoader,
-  defaultFileComponentConstructorFn,
-  defaultLoadingComponentConstructorFn
-} from './functions/constructors';
+  getFilesUploaderFileInfoFromInstanceFile,
+  mergeDeepConfig,
+  setInput,
+  validateFileExtension,
+  validateFileSize
+} from './functions/functions';
+import { createListElements, createListWrapper, createLoader } from './functions/constructors';
 import {
+  FilesUploaderAddFileEvent,
   FilesUploaderAddFileToQueueEvent,
-  FilesUploaderListElements,
   FilesUploaderFileData,
+  FilesUploaderListElements,
   FilesUploaderSettings
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
-import LoadingComponent from './LoadingComponent';
+import UploadingElement from './UploadingElement';
 import Queue from './Queue';
 import CompleteList from './CompleteList';
-import FileComponent from './FileComponent';
+import CompleteElement from './CompleteElement';
 import EventDispatcher, { Handler } from './EventDispatcher';
 import Themes from './Themes';
+import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
+import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
 
 export default class FilesUploader {
   elements: FilesUploaderListElements;
@@ -66,8 +69,8 @@ export default class FilesUploader {
       maxSize: 10 * 1024 * 1024,
       maxParallelUploads: 3,
       autoUpload: false,
-      loadingComponentConstructorFn: defaultLoadingComponentConstructorFn,
-      fileComponentConstructorFn: defaultFileComponentConstructorFn,
+      loadingComponentConstructorFn: factoryDefaultUploadingComponent,
+      fileComponentConstructorFn: factoryDefaultCompleteComponent,
       imageView: false,
       headersLoad: {},
       headersRemove: {},
@@ -86,11 +89,11 @@ export default class FilesUploader {
     wrapper.appendChild(loader);
     const wrapperLists = document.createElement('div');
     wrapperLists.classList.add('FilesUploader-WrapperLists');
-    const inProcessList = createListElements(FilesUploaderTypeFile.Introduced);
-    const completeList = createListElements(FilesUploaderTypeFile.Downloaded);
-    const inProcessListWrapper = createListWrapper(FilesUploaderTypeFile.Introduced, labels.inProcessList);
+    const inProcessList = createListElements(FilesUploaderTypeFile.Uploading);
+    const completeList = createListElements(FilesUploaderTypeFile.Complete);
+    const inProcessListWrapper = createListWrapper(FilesUploaderTypeFile.Uploading, labels.inProcessList);
     inProcessListWrapper.appendChild(inProcessList);
-    const completeListWrapper = createListWrapper(FilesUploaderTypeFile.Downloaded, labels.completeList);
+    const completeListWrapper = createListWrapper(FilesUploaderTypeFile.Complete, labels.completeList);
     completeListWrapper.appendChild(completeList);
     wrapperLists.appendChild(inProcessList);
     wrapperLists.appendChild(completeList);
@@ -134,17 +137,14 @@ export default class FilesUploader {
   private addFileToQueue(file: File) {
     const { maxSize, acceptTypes, maxFiles, loadingComponentConstructorFn, autoUpload } = this.configuration;
     this.counterLoadFiles += 1;
-
-    const loadingElement = loadingComponentConstructorFn(
-      file,
-      () => {
-        this.uploadFile(element);
-      },
-      () => {
-        this.removeQueueFile(element);
-      }
-    );
-    const element = new LoadingComponent(this.elements.inProcessList, this.counterLoadFiles, file, loadingElement);
+    const loadingComponent = loadingComponentConstructorFn(getFilesUploaderFileInfoFromInstanceFile(file));
+    loadingComponent.onDidCallUpload(() => {
+      this.uploadFile(element);
+    });
+    loadingComponent.onDidCallCancel(() => {
+      this.removeQueueFile(element);
+    });
+    const element = new UploadingElement(this.elements.inProcessList, this.counterLoadFiles, file, loadingComponent);
     this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
     if (!validateFileSize(file, maxSize)) {
@@ -167,18 +167,17 @@ export default class FilesUploader {
     }
   }
 
-  private setErrorToElementQueue(element: LoadingComponent, errors: FilesUploaderErrorType[]) {
+  private setErrorToElementQueue(element: UploadingElement, errors: FilesUploaderErrorType[]) {
     element.setError(errors, this.configuration.errorTexts);
   }
 
-  private uploadFile(element: LoadingComponent) {
+  private uploadFile(element: UploadingElement) {
     const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
     if (!element.error || element.errorTypes.includes(FilesUploaderErrorType.Server)) {
       element.setStatus(FilesUploaderStatus.Uploading);
       element
         .upload(actionLoad, headersLoad, externalDataLoad)
         .then(dataResponse => {
-          element.setStatus(FilesUploaderStatus.Complete);
           this.removeQueueFile(element);
           this.addFile(dataResponse);
         })
@@ -188,7 +187,7 @@ export default class FilesUploader {
     }
   }
 
-  private removeQueueFile(element: LoadingComponent) {
+  private removeQueueFile(element: UploadingElement) {
     element.abort();
     element.destroy();
     this.queue.remove(element.numb);
@@ -203,22 +202,19 @@ export default class FilesUploader {
       imageView
     } = this.configuration;
     const info = this.files.add(data);
-    const renderFile = fileComponentConstructorFn(
-      info,
-      () => {
-        fileInstance
-          .delete(actionRemove, headersRemove, externalDataRemove)
-          .then(() => {
-            fileInstance.destroy();
-            this.files.remove(info.id);
-          })
-          .catch(() => {
-            console.error(`File ${data.path} can't delete`);
-          });
-      },
-      imageView
-    );
-    const fileInstance = new FileComponent(data.path, this.elements.completeList, renderFile);
+    const fileCompleteComponent = fileComponentConstructorFn(info, imageView);
+    const fileInstance = new CompleteElement(data.path, this.elements.completeList, fileCompleteComponent);
+    fileCompleteComponent.onDidCallRemove(() => {
+      fileInstance
+        .delete(actionRemove, headersRemove, externalDataRemove)
+        .then(() => {
+          fileInstance.destroy();
+          this.files.remove(info.id);
+        })
+        .catch(() => {
+          fileInstance.setError([FilesUploaderErrorType.Server], this.configuration.errorTexts);
+        });
+    });
     this.fireDidAddFile({
       instance: this
     });
@@ -232,11 +228,11 @@ export default class FilesUploader {
     this.didAddFileToQueueDispatcher.fire(event);
   }
 
-  private didAddFileDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();
-  onDidAddFile(handler: Handler<FilesUploaderAddFileToQueueEvent>) {
+  private didAddFileDispatcher = new EventDispatcher<FilesUploaderAddFileEvent>();
+  onDidAddFile(handler: Handler<FilesUploaderAddFileEvent>) {
     this.didAddFileDispatcher.register(handler);
   }
-  private fireDidAddFile(event: FilesUploaderAddFileToQueueEvent) {
+  private fireDidAddFile(event: FilesUploaderAddFileEvent) {
     this.didAddFileDispatcher.fire(event);
   }
 }

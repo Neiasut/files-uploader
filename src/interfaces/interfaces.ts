@@ -26,8 +26,8 @@ export interface FilesUploaderSettings {
   acceptTypes?: string[];
   maxParallelUploads?: number;
   autoUpload?: boolean;
-  loadingComponentConstructorFn?: FilesUploaderLoadingConstructorFn;
-  fileComponentConstructorFn?: FilesUploaderFileConstructorFn;
+  loadingComponentConstructorFn?: (data: FilesUploaderFileInfo) => LoadingFileComponent;
+  fileComponentConstructorFn?: (data: FilesUploaderFileDataElement, imageView: boolean) => CompleteFileComponent;
   labels?: FilesUploaderLabels;
   statusTexts?: FilesUploaderStatusesKeys;
   errorTexts?: FilesUploaderErrorKeys;
@@ -38,37 +38,12 @@ export interface FilesUploaderSettings {
   externalDataRemove?: { [key: string]: string };
 }
 
-export type FilesUploaderLoadingConstructorFn = (
-  file: File,
-  onUpload: () => void,
-  onCancel: () => void
-) => FilesUploaderLoadingConstructorFnResult;
-
-export interface FilesUploaderLoadingConstructorFnResult {
-  elementDOM: Element;
-  onChangeStatus?: (status: FilesUploaderStatus) => void;
-  onChangePercent?: (percent: number) => void;
-  onError?: (errorTexts: FilesUploaderErrorInfo[]) => void;
-  onDestroy?: () => void;
-}
-
 export type FilesUploaderStatusesKeys = Record<FilesUploaderStatus, string>;
 export type FilesUploaderErrorKeys = Record<FilesUploaderErrorType, string>;
 
 export interface FilesUploaderErrorInfo {
   type: FilesUploaderErrorType;
   text: string;
-}
-
-export type FilesUploaderFileConstructorFn = (
-  data: FilesUploaderFileDataElement,
-  onDelete: () => void,
-  imageView: boolean
-) => FilesUploaderFileConstructorFnResult;
-
-export interface FilesUploaderFileConstructorFnResult {
-  elementDOM: Element;
-  onDestroy?: () => void;
 }
 
 export interface FilesUploaderFileInfo {
@@ -94,4 +69,29 @@ export interface FilesUploaderAddFileEvent {
 export interface FilesUploaderFileData extends FilesUploaderFileInfo {
   path: string;
   externalData?: object;
+}
+
+export interface FilesUploaderElement {
+  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void;
+  setStatus(status: FilesUploaderStatus): void;
+}
+
+export interface FilesUploaderComponent {
+  onInit(...args): void;
+  render(): HTMLElement;
+  destroy(): void;
+  setStatus?(status: FilesUploaderStatus): void;
+  setError?(errorTexts: FilesUploaderErrorInfo[]): void;
+}
+
+export interface CompleteFileComponent extends FilesUploaderComponent {
+  onInit(data: FilesUploaderFileDataElement, imageView: boolean): void;
+  onDidCallRemove(handler: () => void): void;
+}
+
+export interface LoadingFileComponent extends FilesUploaderComponent {
+  onInit(data: FilesUploaderFileInfo): void;
+  onDidCallUpload(handler: () => void): void;
+  onDidCallCancel(handler: () => void): void;
+  changePercent?(percent: number): void;
 }

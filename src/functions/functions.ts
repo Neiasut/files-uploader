@@ -1,4 +1,4 @@
-import { FilesUploaderErrorInfo, FilesUploaderErrorKeys } from '../interfaces/interfaces';
+import { FilesUploaderErrorInfo, FilesUploaderErrorKeys, FilesUploaderFileInfo } from '../interfaces/interfaces';
 import { FilesUploaderErrorType } from '../enums/enums';
 
 export const mergeDeepConfig = (...objects) => {
@@ -104,3 +104,9 @@ export const transformObjectToSendData: {
   }
   return form;
 };
+
+export const getFilesUploaderFileInfoFromInstanceFile = (file: File): FilesUploaderFileInfo => ({
+  name: file.name,
+  size: file.size,
+  extension: getFileExtension(file.name)
+});

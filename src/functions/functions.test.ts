@@ -2,7 +2,7 @@ import {
   calcPercentage,
   generateRandomString,
   getFileExtension,
-  getFilesUploaderErrorInfo,
+  getFilesUploaderErrorInfo, getFilesUploaderFileInfoFromInstanceFile,
   mergeDeepConfig,
   setInput,
   transformObjectToSendData,

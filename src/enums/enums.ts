@@ -13,6 +13,6 @@ export enum FilesUploaderErrorType {
 }
 
 export enum FilesUploaderTypeFile {
-  Introduced = 'introduced',
-  Downloaded = 'downloaded'
+  Uploading = 'uploading',
+  Complete = 'complete'
 }
