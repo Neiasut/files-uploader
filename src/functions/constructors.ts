@@ -12,7 +12,7 @@ export const createLoader = (text: string): Element => {
 
 export const createListElements = (type: FilesUploaderTypeFile): Element => {
   const list = document.createElement('ul');
-  list.classList.add('FilesUploaderList', `FilesUploaderList_type_${FilesUploaderTypeFile[type]}`);
+  list.classList.add('FilesUploaderList', `FilesUploaderList_type_${type}`);
   return list;
 };
 

@@ -10,22 +10,20 @@ test('createLoader', () => {
 
 describe('createListWrapper', () => {
   test('isset label', () => {
-    const listWrapper = createListWrapper(FilesUploaderTypeFile.Introduced, 'test');
+    const listWrapper = createListWrapper(FilesUploaderTypeFile.Uploading, 'test');
     const label = listWrapper.querySelector('label');
     expect(label).not.toBeNull();
     expect(label.textContent).toBe('test');
   });
   test('no label', () => {
-    const listWrapper = createListWrapper(FilesUploaderTypeFile.Downloaded);
+    const listWrapper = createListWrapper(FilesUploaderTypeFile.Complete);
     const label2 = listWrapper.querySelector('label');
     expect(label2).toBeNull();
   });
 });
 
 test('createListElements', () => {
-  expect(createListElements(FilesUploaderTypeFile.Downloaded)).toBeDefined();
-  const list = createListElements(FilesUploaderTypeFile.Downloaded);
-  expect(
-    list.classList.contains('FilesUploaderList_type_' + FilesUploaderTypeFile[FilesUploaderTypeFile.Downloaded])
-  ).toBeTruthy();
+  expect(createListElements(FilesUploaderTypeFile.Complete)).toBeDefined();
+  const list = createListElements(FilesUploaderTypeFile.Complete);
+  expect(list.classList.contains('FilesUploaderList_type_' + FilesUploaderTypeFile.Complete)).toBeTruthy();
 });
