@@ -1,6 +1,7 @@
 import './styles/FilesUploader.scss';
 import {
   getFilesUploaderFileInfoFromInstanceFile,
+  getQueryElement,
   mergeDeepConfig,
   setInput,
   validateFileExtension,
@@ -32,8 +33,11 @@ export default class FilesUploader {
   files = new CompleteList();
   private counterLoadFiles = 0;
 
-  constructor(query: string, settings?: FilesUploaderSettings, themes?: string[]) {
-    const input = document.querySelector(query);
+  constructor(query: string | HTMLElement, settings?: FilesUploaderSettings, themes?: string[]) {
+    const input = getQueryElement(query);
+    if (input === false) {
+      throw new Error(`Parameter "query" is not valid!`);
+    }
     const themesUse = Array.isArray(themes) ? themes : [];
     this.settings = settings;
     this.setConfiguration(themesUse, settings);

@@ -16,9 +16,15 @@ describe('FilesUploader test', () => {
     expect(instance).toBeInstanceOf(Object);
   });
 
+  test('init error', () => {
+    expect(() => {
+      const instance = new FilesUploader('#testeed');
+    }).toThrowError();
+  });
+
   test('addFile', () => {
-    mockDefaultInput();
-    const instance = new FilesUploader('#test');
+    const input = mockDefaultInput();
+    const instance = new FilesUploader(input);
     const fileExample = mockFilesUploaderFileData();
     instance.addFile(fileExample);
     expect(instance.files.length).toBe(1);

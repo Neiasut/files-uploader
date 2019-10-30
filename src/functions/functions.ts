@@ -110,3 +110,16 @@ export const getFilesUploaderFileInfoFromInstanceFile = (file: File): FilesUploa
   size: file.size,
   extension: getFileExtension(file.name)
 });
+
+export const getQueryElement = (element: HTMLElement | string): HTMLElement | false => {
+  if (typeof element === 'string') {
+    const elem = document.querySelector(element);
+    if (elem !== null) {
+      return elem as HTMLElement;
+    }
+  }
+  if (element instanceof HTMLElement) {
+    return element;
+  }
+  return false;
+};

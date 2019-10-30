@@ -2,7 +2,7 @@ import {
   calcPercentage,
   generateRandomString,
   getFileExtension,
-  getFilesUploaderErrorInfo, getFilesUploaderFileInfoFromInstanceFile,
+  getFilesUploaderErrorInfo, getFilesUploaderFileInfoFromInstanceFile, getQueryElement,
   mergeDeepConfig,
   setInput,
   transformObjectToSendData,
@@ -107,4 +107,14 @@ test('transformObjectToSendData', () => {
   );
   expect(result2).toBeInstanceOf(FormData);
   expect(result2.get('file')).toBeInstanceOf(File);
+});
+
+test('getQueryElement', () => {
+  const div = document.createElement('div');
+  div.id = 'tested';
+  document.body.appendChild(div);
+  expect(getQueryElement('#tested')).toBeInstanceOf(HTMLElement);
+  expect(getQueryElement(div)).toBeInstanceOf(HTMLElement);
+  expect(getQueryElement('#someId')).toBeFalsy();
+  expect(getQueryElement('.arr')).toBeFalsy();
 });
