@@ -110,11 +110,11 @@ test('transformObjectToSendData', () => {
 });
 
 test('getQueryElement', () => {
-  const div = document.createElement('div');
-  div.id = 'tested';
-  document.body.appendChild(div);
-  expect(getQueryElement('#tested')).toBeInstanceOf(HTMLElement);
-  expect(getQueryElement(div)).toBeInstanceOf(HTMLElement);
+  const input = document.createElement('input');
+  input.id = 'tested';
+  document.body.appendChild(input);
+  expect(getQueryElement('#tested')).toBeInstanceOf(HTMLInputElement);
+  expect(getQueryElement(input)).toBeInstanceOf(HTMLInputElement);
   expect(getQueryElement('#someId')).toBeFalsy();
   expect(getQueryElement('.arr')).toBeFalsy();
 });

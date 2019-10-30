@@ -33,7 +33,12 @@ export default class FilesUploader {
   files = new CompleteList();
   private counterLoadFiles = 0;
 
-  constructor(query: string | HTMLElement, settings?: FilesUploaderSettings, themes?: string[]) {
+  constructor(
+    query: string | HTMLInputElement,
+    settings?: FilesUploaderSettings,
+    themes?: string[],
+    files?: FilesUploaderFileData[]
+  ) {
     const input = getQueryElement(query);
     if (input === false) {
       throw new Error(`Parameter "query" is not valid!`);
@@ -41,9 +46,12 @@ export default class FilesUploader {
     const themesUse = Array.isArray(themes) ? themes : [];
     this.settings = settings;
     this.setConfiguration(themesUse, settings);
-    this.createCarcass(input as HTMLInputElement);
+    this.createCarcass(input);
     this.addListeners();
     FilesUploader.themes.fireAfterConstructorForArrThemes(themesUse, this);
+    if (Array.isArray(files)) {
+      this.addFiles(files);
+    }
   }
 
   static themes = new Themes();
@@ -232,5 +240,11 @@ export default class FilesUploader {
   }
   private fireDidAddFile(event: FilesUploaderAddFileEvent) {
     this.didAddFileDispatcher.fire(event);
+  }
+
+  addFiles(arrFiles: FilesUploaderFileData[]) {
+    arrFiles.forEach(file => {
+      this.addFile(file);
+    });
   }
 }

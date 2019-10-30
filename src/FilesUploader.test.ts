@@ -19,6 +19,7 @@ describe('FilesUploader test', () => {
   test('init error', () => {
     expect(() => {
       const instance = new FilesUploader('#testeed');
+      console.log(instance);
     }).toThrowError();
   });
 
@@ -93,5 +94,32 @@ describe('FilesUploader test', () => {
       expect(spyUploadFile).toHaveBeenCalled();
       spyUploadFile.mockRestore();
     });
+  });
+
+  test('add files in constructor', () => {
+    const input = mockDefaultInput();
+    const spyAddFile = jest.spyOn(FilesUploader.prototype as any, 'addFile');
+    const instance = new FilesUploader(
+      input,
+      {},
+      [],
+      [
+        {
+          name: 'test.txt',
+          extension: 'text',
+          size: 400,
+          path: '/test.txt'
+        },
+        {
+          name: 'test.txt',
+          extension: 'text',
+          size: 400,
+          path: '/test.txt'
+        }
+      ]
+    );
+    expect(instance.files.length).toBe(2);
+    expect(spyAddFile).toHaveBeenCalledTimes(2);
+    spyAddFile.mockRestore();
   });
 });

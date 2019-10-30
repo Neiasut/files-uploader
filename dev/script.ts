@@ -17,7 +17,15 @@ const instance = new FilesUploader(
       info: 'someInfoForRemove'
     }
   },
-  ['testSettings', 'test', 'test2']
+  ['testSettings', 'test', 'test2'],
+  [
+    {
+      name: 'test.txt',
+      size: 400,
+      path: '/test.txt',
+      extension: 'txt'
+    }
+  ]
 );
 
 instance.onDidAddFileToQueue(event => {

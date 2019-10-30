@@ -111,11 +111,11 @@ export const getFilesUploaderFileInfoFromInstanceFile = (file: File): FilesUploa
   extension: getFileExtension(file.name)
 });
 
-export const getQueryElement = (element: HTMLElement | string): HTMLElement | false => {
+export const getQueryElement = (element: HTMLInputElement | string): HTMLInputElement | false => {
   if (typeof element === 'string') {
     const elem = document.querySelector(element);
-    if (elem !== null) {
-      return elem as HTMLElement;
+    if (elem !== null && elem instanceof HTMLInputElement) {
+      return elem;
     }
   }
   if (element instanceof HTMLElement) {
