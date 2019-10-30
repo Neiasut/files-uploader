@@ -23,8 +23,8 @@ test('functions', () => {
   instance.onDidCallCancel(cbCancel);
   instance.onDidCallUpload(cbUpload);
   const render = instance.render();
-  render.querySelector('.cancel').dispatchEvent(new Event('click'));
-  render.querySelector('.upload').dispatchEvent(new Event('click'));
+  instance.buttonCancel.dispatchEvent(new Event('click'));
+  instance.buttonUpload.dispatchEvent(new Event('click'));
   expect(cbCancel).toHaveBeenCalled();
   expect(cbUpload).toHaveBeenCalled();
 });

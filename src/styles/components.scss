@@ -1,18 +1,40 @@
 .FilesUploader{
-
+  &-WrapperList{
+    display: none;
+  }
+  &-ListTitle{
+    display: block;
+    font-size: 24px;
+    line-height: 36px;
+  }
+  &.hasUploadingFiles{
+    .FilesUploader-WrapperList_type_uploading{
+      display: block
+    }
+  }
+  &.hasCompleteFiles{
+    .FilesUploader-WrapperList_type_complete{
+      display: block
+    }
+  }
+  &.hasUploadingFiles, &.hasCompleteFiles{
+    .FilesUploader-WrapperLists{
+      margin-top: 1rem;
+    }
+  }
 }
 
 .FilesUploaderLoader{
-  font-size: var(--fileUploader-loader-fontSize);
-  line-height: var(--fileUploader-loader-lineHeight);
-  border-radius: var(--fileUploader-loader-borderRadius);
-  background-color: var(--fileUploader-backgroundComponents);
-  border: var(--fileUploader-loader-border);
+  font-size: var(--filesUploader-loader-fontSize);
+  line-height: var(--filesUploader-loader-lineHeight);
+  border-radius: var(--filesUploader-loader-borderRadius);
+  background-color: var(--filesUploader-backgroundComponents);
+  border: var(--filesUploader-loader-border);
   position: relative;
-  color: var(--fileUploader-loader-color);
+  color: var(--filesUploader-loader-color);
   &-Text{
     text-align: center;
-    padding: var(--fileUploader-loader-padding);
+    padding: var(--filesUploader-loader-padding);
   }
   &-Input{
     position: absolute;
@@ -25,4 +47,80 @@
     opacity: 0;
     cursor: pointer;
   }
+}
+
+.FilesUploaderList{
+  margin: 0;
+  & > li {
+    margin: 1rem 0;
+  }
+}
+
+.FilesUploaderUploadingComponent {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: var(--filesUploader-component-fontSize);
+  line-height: var(--filesUploader-component-lineHeight);
+  color: var(--filesUploader-component-color);
+  &-Errors{
+    display: none;
+    color: var(--filesUploader-error-color-font);
+  }
+  &-Actions{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  &_status_error{
+    .FilesUploaderUploadingComponent-Errors{
+      display: block;
+    }
+  }
+}
+
+.FilesUploaderCompleteComponent{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: var(--filesUploader-component-fontSize);
+  line-height: var(--filesUploader-component-lineHeight);
+  color: var(--filesUploader-component-color);
+  &-ImageWrapper{
+    width: 4rem;
+    height: 4rem;
+  }
+  &-Image{
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+  &-Errors{
+    display: none;
+    color: var(--filesUploader-error-color-font);
+  }
+  &-Actions{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  &_status_error{
+    .FilesUploaderCompleteComponent-Errors{
+      display: block;
+    }
+  }
+}
+
+.FilesUploaderComponentButton{
+  background-color: var(--filesUploader-button-background);
+  border: var(--filesUploader-button-border);
+  font-size: var(--filesUploader-button-fontSize);
+  line-height: var(--filesUploader-button-lineHeight);
+  border-radius: var(--filesUploader-button-borderRadius);
+  padding: var(--filesUploader-button-padding);
+  color: var(--filesUploader-button-color);
 }

@@ -1,12 +1,17 @@
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import { addHeaders, getFilesUploaderErrorInfo, transformObjectToSendData } from './functions/functions';
-import { CompleteFileComponent, FilesUploaderElement, FilesUploaderErrorKeys } from './interfaces/interfaces';
+import {
+  CompleteFileComponent,
+  FilesUploaderAvailableStatusesComplete,
+  FilesUploaderElement,
+  FilesUploaderErrorKeys
+} from './interfaces/interfaces';
 
 export default class CompleteElement implements FilesUploaderElement {
   wrapper: Element;
   pathFile: string;
   component: CompleteFileComponent;
-  status: FilesUploaderStatus;
+  status: FilesUploaderAvailableStatusesComplete;
   errorTypes: FilesUploaderErrorType[] = [];
   constructor(pathFile: string, insertionPoint: Element, component: CompleteFileComponent) {
     const wrapper = this.getWrapper();
@@ -30,6 +35,7 @@ export default class CompleteElement implements FilesUploaderElement {
     externalData: { [key: string]: string }
   ): Promise<any> {
     return new Promise((resolve, reject) => {
+      this.setStatus(FilesUploaderStatus.Removing);
       const xhr = new XMLHttpRequest();
       xhr.open('DELETE', pathRemove, true);
       xhr.responseType = 'json';
@@ -46,7 +52,7 @@ export default class CompleteElement implements FilesUploaderElement {
     });
   }
 
-  setStatus(status: FilesUploaderStatus.Complete | FilesUploaderStatus.Error) {
+  setStatus(status: FilesUploaderAvailableStatusesComplete) {
     this.wrapper.setAttribute('data-file-status', status);
     this.status = status;
     if (status !== FilesUploaderStatus.Error) {

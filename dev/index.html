@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Files-Uploader</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Files-Uploader</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        .fieldWrapper{
+            margin: 2rem 0;
+            max-width: 500px;
+        }
+        .fieldLabel{
+            font-size: 1.5rem;
+            line-height: 1.5em;
+            display: block;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
     <h1>Files-Uploader</h1>
-    <input type="file" id="example1" />
-    <input type="file" id="exampleImage" />
+    <div class="fieldWrapper">
+        <label class="fieldLabel">First field</label>
+        <input type="file" id="example1" />
+    </div>
+    <div class="fieldWrapper">
+        <label class="fieldLabel">Second field</label>
+        <input type="file" id="exampleImage" />
+    </div>
 </body>
 </html>

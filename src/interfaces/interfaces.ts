@@ -6,9 +6,9 @@ export interface FilesUploaderListElements {
   wrapper: Element;
   loader: Element;
   wrapperLists: Element;
-  inProcessList: Element;
+  uploadingList: Element;
   completeList: Element;
-  inProcessListWrapper: Element;
+  uploadingListWrapper: Element;
   completeListWrapper: Element;
 }
 
@@ -26,7 +26,7 @@ export interface FilesUploaderSettings {
   acceptTypes?: string[];
   maxParallelUploads?: number;
   autoUpload?: boolean;
-  factoryUploadingComponent?: (data: FilesUploaderFileInfo) => LoadingFileComponent;
+  factoryUploadingComponent?: (data: FilesUploaderFileInfo) => UploadingFileComponent;
   factoryCompleteComponent?: (data: FilesUploaderFileDataElement, imageView: boolean) => CompleteFileComponent;
   labels?: FilesUploaderLabels;
   statusTexts?: FilesUploaderStatusesKeys;
@@ -76,6 +76,16 @@ export interface FilesUploaderElement {
   setStatus(status: FilesUploaderStatus): void;
 }
 
+export type FilesUploaderAvailableStatusesComplete =
+  | FilesUploaderStatus.Complete
+  | FilesUploaderStatus.Error
+  | FilesUploaderStatus.Removing;
+
+export type FilesUploaderAvailableStatusesUploading =
+  | FilesUploaderStatus.WaitingUpload
+  | FilesUploaderStatus.Error
+  | FilesUploaderStatus.Uploading;
+
 export interface FilesUploaderComponent {
   onInit(...args): void;
   render(): HTMLElement;
@@ -87,11 +97,13 @@ export interface FilesUploaderComponent {
 export interface CompleteFileComponent extends FilesUploaderComponent {
   onInit(data: FilesUploaderFileDataElement, imageView: boolean): void;
   onDidCallRemove(handler: () => void): void;
+  setStatus?(status: FilesUploaderAvailableStatusesComplete): void;
 }
 
-export interface LoadingFileComponent extends FilesUploaderComponent {
+export interface UploadingFileComponent extends FilesUploaderComponent {
   onInit(data: FilesUploaderFileInfo): void;
   onDidCallUpload(handler: () => void): void;
   onDidCallCancel(handler: () => void): void;
   changePercent?(percent: number): void;
+  setStatus?(status: FilesUploaderAvailableStatusesUploading): void;
 }

@@ -16,7 +16,7 @@ test('check param imageView', () => {
   expect(elementDOM.querySelector('.imageWrapper')).toBeNull();
   const instance2 = factoryDefaultCompleteComponent(data, true);
   const elementDOM2 = instance2.render();
-  expect(elementDOM2.querySelector('.imageWrapper')).toBeInstanceOf(HTMLElement);
+  expect(elementDOM2.querySelector('.FilesUploaderCompleteComponent-ImageWrapper')).toBeInstanceOf(HTMLElement);
 });
 
 test('destroy', () => {
@@ -52,12 +52,11 @@ test('setError & change status', () => {
       text: 'type error'
     }
   ]);
-  const textError = render.querySelector('.textError');
-  expect(textError.textContent).toBe('server error, type error');
+  expect(instance.textError.textContent).toBe('server error, type error');
   instance.setStatus(FilesUploaderStatus.Complete);
-  expect(textError.textContent).toBe('');
-  expect(render.classList.contains(`status_complete`)).toBeTruthy();
+  expect(instance.textError.textContent).toBe('');
+  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeTruthy();
   instance.setStatus(FilesUploaderStatus.Error);
-  expect(render.classList.contains(`status_complete`)).toBeFalsy();
-  expect(render.classList.contains(`status_error`)).toBeTruthy();
+  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeFalsy();
+  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_error`)).toBeTruthy();
 });

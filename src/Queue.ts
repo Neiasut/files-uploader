@@ -1,22 +1,26 @@
 import { FilesUploaderStatus } from './enums/enums';
-import LoadingElement from './LoadingComponent';
+import UploadingElement from './UploadingElement';
+import EventDispatcher from './EventDispatcher';
 
 export default class Queue {
-  private arr: LoadingElement[] = [];
+  private arr: UploadingElement[] = [];
 
-  add(element: LoadingElement) {
+  add(element: UploadingElement) {
     this.arr.push(element);
+    this.fireDidChangeLength();
   }
 
-  get(numb: number): LoadingElement {
+  get(numb: number): UploadingElement {
     return this.arr.find(element => element.numb === numb);
   }
 
-  remove(numb: number): LoadingElement {
+  remove(numb: number): UploadingElement {
     const element = this.get(numb);
     const index = this.arr.indexOf(element);
     if (index !== -1) {
-      return this.arr.splice(index, 1)[0];
+      const removed = this.arr.splice(index, 1)[0];
+      this.fireDidChangeLength();
+      return removed;
     }
     return;
   }
@@ -32,5 +36,13 @@ export default class Queue {
       }
       return acc;
     }, 0);
+  }
+
+  protected didChangeLengthDispatcher = new EventDispatcher<number>();
+  onDidChangeLength(handler: (length: number) => void) {
+    this.didChangeLengthDispatcher.register(handler);
+  }
+  protected fireDidChangeLength() {
+    this.didChangeLengthDispatcher.fire(this.length);
   }
 }

@@ -1,5 +1,6 @@
 import { FilesUploaderFileDataElement, FilesUploaderFileData } from './interfaces/interfaces';
 import { generateRandomString, mergeDeepConfig } from './functions/functions';
+import EventDispatcher from './EventDispatcher';
 
 export default class CompleteList {
   private arr: FilesUploaderFileDataElement[] = [];
@@ -9,13 +10,16 @@ export default class CompleteList {
       id: generateRandomString()
     });
     this.arr.push(info);
+    this.fireDidChangeLength();
     return info;
   }
 
   remove(id: string): FilesUploaderFileDataElement {
     const index = this.arr.findIndex(element => element.id === id);
     if (index !== -1) {
-      return this.arr.splice(index, 1)[0];
+      const removed = this.arr.splice(index, 1)[0];
+      this.fireDidChangeLength();
+      return removed;
     }
   }
 
@@ -34,5 +38,13 @@ export default class CompleteList {
 
   getByFn(cb: (element: FilesUploaderFileDataElement, numb: number) => void): FilesUploaderFileDataElement {
     return this.arr.find((element, numb) => cb(element, numb));
+  }
+
+  private didChangeLengthDispatcher = new EventDispatcher<number>();
+  onDidChangeLength(handler: (length: number) => void) {
+    this.didChangeLengthDispatcher.register(handler);
+  }
+  fireDidChangeLength() {
+    this.didChangeLengthDispatcher.fire(this.length);
   }
 }

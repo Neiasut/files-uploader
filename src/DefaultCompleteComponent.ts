@@ -1,7 +1,13 @@
-import { FilesUploaderFileDataElement, CompleteFileComponent, FilesUploaderErrorInfo } from './interfaces/interfaces';
+import {
+  CompleteFileComponent,
+  FilesUploaderAvailableStatusesComplete,
+  FilesUploaderErrorInfo,
+  FilesUploaderFileDataElement
+} from './interfaces/interfaces';
 import EventDispatcher from './EventDispatcher';
 import { FilesUploaderStatus } from './enums/enums';
 import { filesUploaderComponent } from './functions/decorators';
+import { createButtonAsString } from './functions/constructors';
 
 @filesUploaderComponent
 class DefaultCompleteComponent implements CompleteFileComponent {
@@ -10,7 +16,7 @@ class DefaultCompleteComponent implements CompleteFileComponent {
   wrapper: HTMLElement;
   data: FilesUploaderFileDataElement;
   imageView: boolean;
-  status: FilesUploaderStatus;
+  status: FilesUploaderAvailableStatusesComplete;
 
   onInit(data: FilesUploaderFileDataElement, imageView: boolean): void {
     this.data = data;
@@ -19,19 +25,23 @@ class DefaultCompleteComponent implements CompleteFileComponent {
 
   render(): HTMLElement {
     const root = document.createElement('div');
+    root.classList.add('FilesUploaderCompleteComponent');
     root.innerHTML = `
       ${
         this.imageView
-          ? `<span class="imageWrapper"><img class="image" src="${this.data.path}" alt="download image" /></span>`
+          ? `<span class="FilesUploaderCompleteComponent-ImageWrapper"><img class="FilesUploaderCompleteComponent-Image" src="${this.data.path}" alt="download image" /></span>`
           : ''
       }
-      <span>${this.data.name}</span>
-      <span class="textError"></span>
-      <span><button type="button">Remove</button></span>
+      <span class="FilesUploaderCompleteComponent-Name">${this.data.name}</span>
+      <span class="FilesUploaderCompleteComponent-Errors"></span>
+      <span class="FilesUploaderCompleteComponent-Actions">${createButtonAsString('remove', [
+        'FilesUploaderComponentButton',
+        'FilesUploaderCompleteComponent-Button'
+      ])}</span>
     `;
     this.buttonRemove = root.querySelector('button');
     this.buttonRemove.addEventListener('click', this.handleClickRemove);
-    this.textError = root.querySelector('.textError');
+    this.textError = root.querySelector('.FilesUploaderCompleteComponent-Errors');
     this.wrapper = root;
     return root;
   }
@@ -57,12 +67,13 @@ class DefaultCompleteComponent implements CompleteFileComponent {
     this.textError.textContent = errorTexts.map(element => element.text).join(', ');
   }
 
-  setStatus(status: FilesUploaderStatus): void {
+  setStatus(status: FilesUploaderAvailableStatusesComplete): void {
     if (status !== FilesUploaderStatus.Error) {
       this.textError.textContent = '';
     }
-    this.wrapper.classList.remove(`status_${this.status}`);
-    this.wrapper.classList.add(`status_${status}`);
+    this.buttonRemove.disabled = status === FilesUploaderStatus.Removing;
+    this.wrapper.classList.remove(`FilesUploaderCompleteComponent_status_${this.status}`);
+    this.wrapper.classList.add(`FilesUploaderCompleteComponent_status_${status}`);
     this.status = status;
   }
 }

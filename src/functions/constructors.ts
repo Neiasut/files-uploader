@@ -11,7 +11,7 @@ export const createLoader = (text: string): Element => {
 };
 
 export const createListElements = (type: FilesUploaderTypeFile): Element => {
-  const list = document.createElement('ul');
+  const list = document.createElement('ol');
   list.classList.add('FilesUploaderList', `FilesUploaderList_type_${type}`);
   return list;
 };
@@ -25,9 +25,12 @@ const createListTitle = (text: string): Element => {
 
 export const createListWrapper = (type: FilesUploaderTypeFile, title?: string): Element => {
   const wrapper = document.createElement('div');
-  wrapper.classList.add('FilesUploader-WrapperList');
+  wrapper.classList.add('FilesUploader-WrapperList', `FilesUploader-WrapperList_type_${type}`);
   if (title) {
     wrapper.appendChild(createListTitle(title));
   }
   return wrapper;
 };
+
+export const createButtonAsString = (text: string, classes: string[]): string =>
+  `<button class="${classes.join(' ')}" type="button">${text}</button>`;

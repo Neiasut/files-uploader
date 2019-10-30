@@ -62,14 +62,15 @@ export default class FilesUploader {
       acceptTypes: [],
       labels: {
         loader: 'Drag file here or select on device',
-        inProcessList: 'List files in process',
-        completeList: 'List complete files'
+        inProcessList: 'List uploading files',
+        completeList: 'List files'
       },
       statusTexts: {
-        [FilesUploaderStatus.WaitUpload]: 'Wait Upload',
+        [FilesUploaderStatus.WaitingUpload]: 'Wait Upload',
         [FilesUploaderStatus.Uploading]: 'Uploading files',
         [FilesUploaderStatus.Complete]: 'Complete downloading files',
-        [FilesUploaderStatus.Error]: 'test'
+        [FilesUploaderStatus.Error]: 'Error',
+        [FilesUploaderStatus.Removing]: 'Removing'
       },
       errorTexts: {
         [FilesUploaderErrorType.MoreMaxFiles]: 'More max files',
@@ -101,14 +102,14 @@ export default class FilesUploader {
     wrapper.appendChild(loader);
     const wrapperLists = document.createElement('div');
     wrapperLists.classList.add('FilesUploader-WrapperLists');
-    const inProcessList = createListElements(FilesUploaderTypeFile.Uploading);
+    const uploadingList = createListElements(FilesUploaderTypeFile.Uploading);
     const completeList = createListElements(FilesUploaderTypeFile.Complete);
-    const inProcessListWrapper = createListWrapper(FilesUploaderTypeFile.Uploading, labels.inProcessList);
-    inProcessListWrapper.appendChild(inProcessList);
+    const uploadingListWrapper = createListWrapper(FilesUploaderTypeFile.Uploading, labels.inProcessList);
+    uploadingListWrapper.appendChild(uploadingList);
     const completeListWrapper = createListWrapper(FilesUploaderTypeFile.Complete, labels.completeList);
     completeListWrapper.appendChild(completeList);
-    wrapperLists.appendChild(inProcessList);
-    wrapperLists.appendChild(completeList);
+    wrapperLists.appendChild(uploadingListWrapper);
+    wrapperLists.appendChild(completeListWrapper);
     wrapper.appendChild(wrapperLists);
     input.parentNode.insertBefore(wrapper, input.nextSibling);
     loader.appendChild(input);
@@ -117,9 +118,9 @@ export default class FilesUploader {
       wrapper,
       wrapperLists,
       loader,
-      inProcessList,
+      uploadingList,
       completeList,
-      inProcessListWrapper,
+      uploadingListWrapper,
       completeListWrapper
     };
   }
@@ -135,6 +136,22 @@ export default class FilesUploader {
   private addListeners() {
     this.elements.input.addEventListener('change', () => {
       this.onAddFiles();
+    });
+    this.queue.onDidChangeLength(lengthQueue => {
+      const { wrapper } = this.elements;
+      if (lengthQueue > 0) {
+        wrapper.classList.add('hasUploadingFiles');
+      } else {
+        wrapper.classList.remove('hasUploadingFiles');
+      }
+    });
+    this.files.onDidChangeLength(lengthFiles => {
+      const { wrapper } = this.elements;
+      if (lengthFiles > 0) {
+        wrapper.classList.add('hasCompleteFiles');
+      } else {
+        wrapper.classList.remove('hasCompleteFiles');
+      }
     });
   }
 
@@ -156,7 +173,7 @@ export default class FilesUploader {
     loadingComponent.onDidCallCancel(() => {
       this.removeQueueFile(element);
     });
-    const element = new UploadingElement(this.elements.inProcessList, this.counterLoadFiles, file, loadingComponent);
+    const element = new UploadingElement(this.elements.uploadingList, this.counterLoadFiles, file, loadingComponent);
     this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
     if (!validateFileSize(file, maxSize)) {
@@ -185,7 +202,7 @@ export default class FilesUploader {
 
   private uploadFile(element: UploadingElement) {
     const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
-    if (!element.error || element.errorTypes.includes(FilesUploaderErrorType.Server)) {
+    if (!element.error) {
       element.setStatus(FilesUploaderStatus.Uploading);
       element
         .upload(actionLoad, headersLoad, externalDataLoad)

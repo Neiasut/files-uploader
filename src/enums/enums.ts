@@ -1,8 +1,9 @@
 export enum FilesUploaderStatus {
-  WaitUpload = 'waitUpload',
+  WaitingUpload = 'waitingUpload',
   Uploading = 'uploading',
   Complete = 'complete',
-  Error = 'error'
+  Error = 'error',
+  Removing = 'removing'
 }
 
 export enum FilesUploaderErrorType {

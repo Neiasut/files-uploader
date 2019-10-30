@@ -1,9 +1,10 @@
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import {
+  FilesUploaderAvailableStatusesUploading,
   FilesUploaderElement,
   FilesUploaderErrorKeys,
   FilesUploaderFileDataElement,
-  LoadingFileComponent
+  UploadingFileComponent
 } from './interfaces/interfaces';
 import {
   addHeaders,
@@ -16,13 +17,13 @@ export default class UploadingElement implements FilesUploaderElement {
   percent = 0;
   wrapper: Element;
   xhr: XMLHttpRequest | null = null;
-  status: FilesUploaderStatus;
+  status: FilesUploaderAvailableStatusesUploading;
   errorTypes: FilesUploaderErrorType[] = [];
   readonly file: File;
   readonly numb: number;
-  component: LoadingFileComponent;
+  component: UploadingFileComponent;
 
-  constructor(insertionPoint: Element, numb: number, file: File, component: LoadingFileComponent) {
+  constructor(insertionPoint: Element, numb: number, file: File, component: UploadingFileComponent) {
     this.numb = numb;
     this.file = file;
     this.component = component;
@@ -30,7 +31,7 @@ export default class UploadingElement implements FilesUploaderElement {
     wrapper.appendChild(component.render());
     insertionPoint.appendChild(wrapper);
     this.wrapper = wrapper;
-    this.setStatus(FilesUploaderStatus.WaitUpload);
+    this.setStatus(FilesUploaderStatus.WaitingUpload);
   }
 
   get error(): boolean {
@@ -51,7 +52,7 @@ export default class UploadingElement implements FilesUploaderElement {
     }
   }
 
-  setStatus(status: FilesUploaderStatus.WaitUpload | FilesUploaderStatus.Uploading | FilesUploaderStatus.Error) {
+  setStatus(status: FilesUploaderAvailableStatusesUploading) {
     this.wrapper.setAttribute('data-file-status', status);
     this.status = status;
     if (status !== FilesUploaderStatus.Error) {

@@ -1,9 +1,25 @@
 :root{
-  --fileUploader-backgroundComponents: white;
-  --fileUploader-loader-borderRadius: 4px;
-  --fileUploader-loader-padding: 20px;
-  --fileUploader-loader-fontSize: 16px;
-  --fileUploader-loader-lineHeight: 1.5em;
-  --fileUploader-loader-border: 1px solid grey;
-  --fileUploader-loader-color: grey;
+  --fileUploader-background: white;
+  --filesUploader-color: #625a5a;
+
+  --filesUploader-loader-borderRadius: 4px;
+  --filesUploader-loader-padding: 20px;
+  --filesUploader-loader-fontSize: 16px;
+  --filesUploader-loader-lineHeight: 1.5em;
+  --filesUploader-loader-border: 1px solid grey;
+  --filesUploader-loader-color: var(--filesUploader-color);
+
+  --filesUploader-error-color-font: red;
+
+  --filesUploader-component-fontSize: 1rem;
+  --filesUploader-component-lineHeight: 1.5em;
+  --filesUploader-component-color: var(--filesUploader-color);
+
+  --filesUploader-button-fontSize: 1rem;
+  --filesUploader-button-lineHeight: 1em;
+  --filesUploader-button-padding: .5rem 1rem;
+  --filesUploader-button-background: var(--fileUploader-background);
+  --filesUploader-button-border: 1px solid grey;
+  --filesUploader-button-borderRadius: 4px;
+  --filesUploader-button-color: var(--filesUploader-color);
 }
