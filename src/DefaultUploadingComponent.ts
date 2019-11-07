@@ -86,6 +86,7 @@ export class DefaultUploadingComponent implements UploadingComponent {
   }
 
   setError(errors: FilesUploaderErrorType[], errorTexts: FilesUploaderErrorInfo[]): void {
+    this.percentageElement.hidden = true;
     this.errors = errors;
     this.textErrorElement.textContent = errorTexts.map(element => element.text).join(', ');
   }
@@ -103,6 +104,7 @@ export class DefaultUploadingComponent implements UploadingComponent {
   }
 
   onChangePercent(percent: number): void {
+    this.percentageElement.hidden = false;
     this.percentageElement.textContent = `${percent} %`;
   }
 }
