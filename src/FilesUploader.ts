@@ -20,10 +20,10 @@ import {
   UploadingWrapperProps
 } from './interfaces/interfaces';
 import {
+  FilesUploaderDefaultComponentAliases,
   FilesUploaderErrorType,
   FilesUploaderStatus,
-  FilesUploaderTypeFile,
-  FilesUploaderDefaultComponentAliases
+  FilesUploaderTypeFile
 } from './enums/enums';
 import Queue from './Queue';
 import EventDispatcher, { Handler } from './EventDispatcher';
@@ -33,6 +33,7 @@ import { factoryUploadingElement } from './UploadingElement';
 import { factoryCompleteElement } from './CompleteElement';
 import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
 import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
+import FilesUploaderError from './errors/FileUploaderError';
 
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.UploadingElement, factoryUploadingElement);
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.CompleteElement, factoryCompleteElement);
@@ -96,8 +97,10 @@ export default class FilesUploader {
         [FilesUploaderErrorType.MoreMaxFiles]: 'More max files',
         [FilesUploaderErrorType.Size]: 'More max size file',
         [FilesUploaderErrorType.Type]: 'Not type',
-        [FilesUploaderErrorType.Server]: 'Server error',
-        [FilesUploaderErrorType.Network]: 'Network error'
+        [FilesUploaderErrorType.Network]: 'Network error',
+        [FilesUploaderErrorType.Data]: 'Error in data',
+        [FilesUploaderErrorType.Remove]: 'Can not remove file',
+        [FilesUploaderErrorType.Upload]: 'Can not upload file'
       },
       maxFiles: 3,
       maxSize: 10 * 1024 * 1024,
@@ -240,15 +243,10 @@ export default class FilesUploader {
   private uploadFile(element: UploadingWrapper, file?: File) {
     const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
     if (!element.error) {
-      element
-        .upload(actionLoad, headersLoad, externalDataLoad)
-        .then(dataResponse => {
-          this.removeQueueFile(element);
-          this.addFile(dataResponse, file);
-        })
-        .catch(reasons => {
-          throw new Error(`Upload error file name: "${reasons.fileName}"`);
-        });
+      element.upload(actionLoad, headersLoad, externalDataLoad).then(dataResponse => {
+        this.removeQueueFile(element);
+        this.addFile(dataResponse, file);
+      });
     }
   }
 
@@ -259,15 +257,7 @@ export default class FilesUploader {
   }
 
   addFile(data: FilesUploaderFileData, file?: File) {
-    const {
-      actionRemove,
-      headersRemove,
-      externalDataRemove,
-      factoryCompleteComponentAlias,
-      imageView,
-      statusTexts,
-      errorTexts
-    } = this.configuration;
+    const { factoryCompleteComponentAlias, imageView, statusTexts, errorTexts } = this.configuration;
     const imageElement = getElementImage(imageView, FilesUploader.imageExtensions, data.extension, null, data.path);
     const props: CompleteWrapperProps = {
       componentChildFactoryAlias: factoryCompleteComponentAlias,
@@ -276,16 +266,8 @@ export default class FilesUploader {
       file,
       imageElement,
       data,
-      remove: () => {
-        element
-          .delete(actionRemove, headersRemove, externalDataRemove)
-          .then(() => {
-            ComponentPerformer.unmountComponent(element);
-            this.files.remove(element.id);
-          })
-          .catch(e => {
-            throw new Error(`Delete error file ${e.filePath}`);
-          });
+      remove: async () => {
+        await this.removeFile(data.path);
       }
     };
     const element = ComponentPerformer.mountComponent(
@@ -297,6 +279,20 @@ export default class FilesUploader {
     this.fireDidAddFile({
       instance: this
     });
+  }
+
+  async removeFile(path: string): Promise<any> {
+    const { actionRemove, headersRemove, externalDataRemove } = this.configuration;
+    const component = this.files.getByFn(comp => {
+      return comp.props.data.path === path;
+    });
+    if (typeof component === 'undefined') {
+      throw new FilesUploaderError(`Can't element with path = "${path}"`, [FilesUploaderErrorType.Data]);
+    }
+    const body = await component.delete(actionRemove, headersRemove, externalDataRemove);
+    ComponentPerformer.unmountComponent(component);
+    this.files.remove(component.id);
+    return body;
   }
 
   private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();

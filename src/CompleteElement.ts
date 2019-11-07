@@ -11,6 +11,7 @@ import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } fr
 import ComponentPerformer from './ComponentPerformer';
 import { addHeaders, getFilesUploaderErrorInfo, transformObjectToSendData } from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
+import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
 
 export class CompleteElement implements CompleteWrapper {
   id: string;
@@ -61,36 +62,30 @@ export class CompleteElement implements CompleteWrapper {
     ];
   }
 
-  onDeleteError(error: FilesUploaderErrorType.Server | FilesUploaderErrorType.Network) {
-    const errors = [error];
-    this.setError(errors);
-    return {
-      errors,
-      filePath: this.props.data.path
-    };
-  }
-
   delete(
     pathRemove: string,
     headers: { [key: string]: string },
     externalData: { [key: string]: string }
   ): Promise<any> {
     return new Promise((resolve, reject) => {
+      const path = this.props.data.path;
       this.setStatus(FilesUploaderStatus.Removing);
       const xhr = new XMLHttpRequest();
       xhr.open('DELETE', pathRemove, true);
       xhr.responseType = 'json';
       addHeaders(xhr, headers);
-      const info = transformObjectToSendData('json', { path: this.props.data.path }, externalData);
+      const info = transformObjectToSendData('json', { path }, externalData);
       xhr.onload = () => {
         if (xhr.status !== 200) {
-          reject(this.onDeleteError(FilesUploaderErrorType.Server));
+          this.setError([FilesUploaderErrorType.Remove]);
+          reject(new FilesUploaderErrorNetwork('Server error', [FilesUploaderErrorType.Remove], xhr));
         } else {
           resolve(xhr.response);
         }
       };
       xhr.onerror = () => {
-        this.onDeleteError(FilesUploaderErrorType.Network);
+        this.setError([FilesUploaderErrorType.Network]);
+        reject(new FilesUploaderErrorNetwork('NetworkError', [FilesUploaderErrorType.Network], xhr));
       };
       xhr.send(info);
     });

@@ -2,7 +2,8 @@ import FilesUploader from './FilesUploader';
 import { mockDefaultFile, mockDefaultInput, mockFilesUploaderFileData } from './__mock__/structures';
 // @ts-ignore
 import mock from 'xhr-mock';
-import { mockServerUploadSuccess } from './__mock__/servers';
+import {mockServerRemoveSuccess, mockServerUploadSuccess} from './__mock__/servers';
+import {FilesUploaderErrorType} from './enums/enums';
 
 describe('FilesUploader test', () => {
   afterEach(() => {
@@ -20,14 +21,6 @@ describe('FilesUploader test', () => {
     expect(() => {
       const instance = new FilesUploader('#testeed');
     }).toThrowError();
-  });
-
-  test('addFile', () => {
-    const input = mockDefaultInput();
-    const instance = new FilesUploader(input);
-    const fileExample = mockFilesUploaderFileData();
-    instance.addFile(fileExample);
-    expect(instance.files.length).toBe(1);
   });
 
   test('checkEventChangeTriggered', () => {
@@ -92,6 +85,25 @@ describe('FilesUploader test', () => {
       expect(onDidAddFile).toHaveBeenCalledTimes(1);
       expect(spyUploadFile).toHaveBeenCalled();
       spyUploadFile.mockRestore();
+    });
+
+    test('addFile, removeFile', async () => {
+      expect.assertions(3);
+      const input = mockDefaultInput();
+      mockServerRemoveSuccess();
+      const instance = new FilesUploader(input, {
+        actionRemove: '/delete'
+      });
+      const fileExample = mockFilesUploaderFileData();
+      instance.addFile(fileExample);
+      expect(instance.files.length).toBe(1);
+      try {
+        await instance.removeFile('error');
+      } catch (e) {
+        expect(e.reasons[0]).toBe(FilesUploaderErrorType.Data);
+      }
+      await instance.removeFile(fileExample.path);
+      expect(instance.files.length).toBe(0);
     });
   });
 

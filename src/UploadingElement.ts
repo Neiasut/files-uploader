@@ -17,6 +17,7 @@ import {
   transformObjectToSendData
 } from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
+import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
 
 export class UploadingElement implements UploadingWrapper {
   id: string;
@@ -79,15 +80,6 @@ export class UploadingElement implements UploadingWrapper {
     this.getChildren().onChangePercent(percent);
   }
 
-  protected onUploadError(error: FilesUploaderErrorType.Server | FilesUploaderErrorType.Network) {
-    const errors = [error];
-    this.setError(errors);
-    return {
-      errors,
-      fileName: this.props.file.name
-    };
-  }
-
   async upload(path: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
     return new Promise<FilesUploaderFileData>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -100,11 +92,13 @@ export class UploadingElement implements UploadingWrapper {
         if (xhr.status === 200) {
           resolve(xhr.response);
         } else {
-          reject(this.onUploadError(FilesUploaderErrorType.Server));
+          this.setError([FilesUploaderErrorType.Upload]);
+          reject(new FilesUploaderErrorNetwork('Error upload', [FilesUploaderErrorType.Upload], xhr));
         }
       };
       xhr.onerror = () => {
-        this.onUploadError(FilesUploaderErrorType.Network);
+        this.setError([FilesUploaderErrorType.Network]);
+        reject(new FilesUploaderErrorNetwork('Error upload', [FilesUploaderErrorType.Network], xhr));
       };
       xhr.upload.addEventListener(
         'progress',

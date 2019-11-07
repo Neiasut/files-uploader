@@ -36,11 +36,13 @@ export const mockFilesUploaderStatusTexts = (): FilesUploaderStatusTexts => ({
 });
 
 export const mockFilesUploaderErrorTexts = (): FilesUploaderErrorTexts => ({
-  [FilesUploaderErrorType.Server]: 'some text',
+  [FilesUploaderErrorType.Data]: 'some text 1',
   [FilesUploaderErrorType.Size]: 'some text 2',
   [FilesUploaderErrorType.MoreMaxFiles]: 'some text 3',
   [FilesUploaderErrorType.Type]: 'some text 4',
-  [FilesUploaderErrorType.Network]: 'some text 5'
+  [FilesUploaderErrorType.Network]: 'some text 5',
+  [FilesUploaderErrorType.Remove]: 'some text 6',
+  [FilesUploaderErrorType.Upload]: 'some text 7'
 });
 
 export const mockDefaultFile = (): File => {

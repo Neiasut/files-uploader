@@ -60,10 +60,10 @@ describe('with performer', () => {
     const props = mockPropsCompleteComponent();
     const instance = mountComponent(props);
     instance.setError(
-      [FilesUploaderErrorType.Server, FilesUploaderErrorType.Type],
+      [FilesUploaderErrorType.Remove, FilesUploaderErrorType.Type],
       [
         {
-          type: FilesUploaderErrorType.Server,
+          type: FilesUploaderErrorType.Remove,
           text: 'server error'
         },
         {

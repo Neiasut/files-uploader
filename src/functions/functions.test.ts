@@ -84,11 +84,11 @@ test('calcPercentage', () => {
 
 test('getFilesUploaderErrorInfo', () => {
   const texts = mockFilesUploaderErrorTexts();
-  expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)).toBeInstanceOf(Object);
+  expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Data], texts)).toBeInstanceOf(Object);
   expect(
-    getFilesUploaderErrorInfo([FilesUploaderErrorType.Server, FilesUploaderErrorType.MoreMaxFiles], texts).length
+    getFilesUploaderErrorInfo([FilesUploaderErrorType.Data, FilesUploaderErrorType.MoreMaxFiles], texts).length
   ).toBe(2);
-  expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)[0].text).toBe('some text');
+  expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Data], texts)[0].text).toBe('some text 1');
 });
 
 test('generateRandomString', () => {

@@ -1,6 +1,6 @@
 import { CompleteElement, factoryCompleteElement } from './CompleteElement';
 // @ts-ignore
-import mock, { delay } from 'xhr-mock';
+import mock from 'xhr-mock';
 import { DefaultCompleteComponent, factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
 import { mockDefaultDiv, mockPropsCompleteElement } from './__mock__/structures';
 import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
@@ -52,7 +52,7 @@ describe('tests completeElement', () => {
       instance,
       ComponentPerformer.childrenKey
     ) as DefaultCompleteComponent;
-    instance.setError([FilesUploaderErrorType.Server]);
+    instance.setError([FilesUploaderErrorType.Remove]);
     expect(spyChildSetError).toHaveBeenCalled();
     expect(childInstance.status).toBe(FilesUploaderStatus.Error);
     spyChildSetError.mockRestore();
@@ -90,8 +90,8 @@ describe('tests completeElement', () => {
       try {
         await instance.delete('/test', {}, {});
       } catch (e) {
-        expect(Array.isArray(e.errors)).toBeTruthy();
-        expect(e.errors.length).toBe(1);
+        expect(e.reasons[0]).toBe(FilesUploaderErrorType.Remove);
+        expect(e.reasons.length).toBe(1);
       }
     });
   });

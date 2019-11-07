@@ -17,3 +17,9 @@ export const mockServerUploadSuccess = () => {
     return response.status(200).body(JSON.stringify(data));
   });
 };
+
+export const mockServerRemoveSuccess = () => {
+  mock.delete('/delete', (request, response) => {
+    return response.status(200).body(JSON.stringify({}));
+  });
+};

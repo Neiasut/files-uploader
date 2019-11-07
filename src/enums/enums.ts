@@ -10,8 +10,10 @@ export enum FilesUploaderErrorType {
   MoreMaxFiles = 'moreMaxFiles',
   Size = 'size',
   Type = 'type',
-  Server = 'server',
-  Network = 'network'
+  Network = 'network',
+  Data = 'data',
+  Remove = 'remove',
+  Upload = 'upload'
 }
 
 export enum FilesUploaderTypeFile {
