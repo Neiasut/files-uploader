@@ -15,7 +15,8 @@ const instance = new FilesUploader(
     },
     externalDataRemove: {
       info: 'someInfoForRemove'
-    }
+    },
+    imageView: true
   },
   ['testSettings', 'test', 'test2'],
   [
@@ -45,3 +46,5 @@ const instance2 = new FilesUploader(
 );
 
 console.log(instance2);
+
+new FilesUploader('#errorField', {}, ['errorUpload']);

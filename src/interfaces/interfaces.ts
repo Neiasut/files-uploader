@@ -26,11 +26,11 @@ export interface FilesUploaderSettings {
   acceptTypes?: string[];
   maxParallelUploads?: number;
   autoUpload?: boolean;
-  factoryUploadingComponent?: (data: FilesUploaderFileInfo) => UploadingFileComponent;
-  factoryCompleteComponent?: (data: FilesUploaderFileDataElement, imageView: boolean) => CompleteFileComponent;
+  factoryUploadingComponentAlias?: string;
+  factoryCompleteComponentAlias?: string;
   labels?: FilesUploaderLabels;
-  statusTexts?: FilesUploaderStatusesKeys;
-  errorTexts?: FilesUploaderErrorKeys;
+  statusTexts?: FilesUploaderStatusTexts;
+  errorTexts?: FilesUploaderErrorTexts;
   imageView?: boolean;
   headersLoad?: { [key: string]: string };
   headersRemove?: { [key: string]: string };
@@ -38,8 +38,8 @@ export interface FilesUploaderSettings {
   externalDataRemove?: { [key: string]: string };
 }
 
-export type FilesUploaderStatusesKeys = Record<FilesUploaderStatus, string>;
-export type FilesUploaderErrorKeys = Record<FilesUploaderErrorType, string>;
+export type FilesUploaderStatusTexts = Record<FilesUploaderStatus, string>;
+export type FilesUploaderErrorTexts = Record<FilesUploaderErrorType, string>;
 
 export interface FilesUploaderErrorInfo {
   type: FilesUploaderErrorType;
@@ -50,12 +50,6 @@ export interface FilesUploaderFileInfo {
   readonly name: string;
   readonly size: number;
   readonly extension: string;
-}
-
-export interface FilesUploaderFileDataElement extends FilesUploaderFileInfo {
-  id: string;
-  path: string;
-  externalData?: object;
 }
 
 export interface FilesUploaderAddFileToQueueEvent {
@@ -71,11 +65,6 @@ export interface FilesUploaderFileData extends FilesUploaderFileInfo {
   externalData?: object;
 }
 
-export interface FilesUploaderElement {
-  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void;
-  setStatus(status: FilesUploaderStatus): void;
-}
-
 export type FilesUploaderAvailableStatusesComplete =
   | FilesUploaderStatus.Complete
   | FilesUploaderStatus.Error
@@ -86,24 +75,101 @@ export type FilesUploaderAvailableStatusesUploading =
   | FilesUploaderStatus.Error
   | FilesUploaderStatus.Uploading;
 
-export interface FilesUploaderComponent {
-  onInit(...args): void;
+export interface QueueElement {
+  status: FilesUploaderStatus;
+  id: string;
+}
+
+export interface SubComponentInfo {
+  root: Element;
+  componentAlias: string;
+  key: string;
+  props?: any;
+}
+
+interface ComponentProtectedFields {
+  _inDOM?: boolean;
+  _children?: Array<Component<any>>;
+  _renderRoot?: Element;
+  _key?: string;
+}
+
+export interface Component<T> extends ComponentProtectedFields {
+  props: T;
   render(): HTMLElement;
-  destroy(): void;
-  setStatus?(status: FilesUploaderStatus): void;
-  setError?(errorTexts: FilesUploaderErrorInfo[]): void;
+  /*setStatus(status: FilesUploaderStatus, textStatus?: string): void;
+  setError(errors: FilesUploaderErrorType[], errorTexts?: FilesUploaderErrorInfo[]): void;*/
+  subComponents?(): SubComponentInfo[];
+  componentWillUnmount?(): void;
+  componentDidMount?(): void;
 }
 
-export interface CompleteFileComponent extends FilesUploaderComponent {
-  onInit(data: FilesUploaderFileDataElement, imageView: boolean): void;
-  onDidCallRemove(handler: () => void): void;
-  setStatus?(status: FilesUploaderAvailableStatusesComplete): void;
+export type ComponentFactory<T, K extends Component<T>> = (props: T) => K;
+
+export interface UploadingWrapperProps {
+  file: File;
+  componentChildFactoryAlias: string;
+  statusTexts: FilesUploaderStatusTexts;
+  errorTexts: FilesUploaderErrorTexts;
+  imageElement?: HTMLImageElement;
+  upload(): void;
+  cancel(): void;
 }
 
-export interface UploadingFileComponent extends FilesUploaderComponent {
-  onInit(data: FilesUploaderFileInfo): void;
-  onDidCallUpload(handler: () => void): void;
-  onDidCallCancel(handler: () => void): void;
-  changePercent?(percent: number): void;
-  setStatus?(status: FilesUploaderAvailableStatusesUploading): void;
+export interface UploadingWrapper extends Component<UploadingWrapperProps>, QueueElement {
+  readonly error: boolean;
+  percent: number;
+  status: FilesUploaderAvailableStatusesUploading;
+  setStatus(status: FilesUploaderAvailableStatusesUploading): void;
+  setError(errors: FilesUploaderErrorType[]): void;
+  changePercent(percent: number): void;
+  upload(
+    path: string,
+    headers: { [key: string]: string },
+    externalData: { [key: string]: string }
+  ): Promise<FilesUploaderFileData>;
+  abort(): void;
+  getChildren(): UploadingComponent;
+}
+
+export interface CompleteWrapperProps {
+  data: FilesUploaderFileData;
+  file?: File;
+  componentChildFactoryAlias: string;
+  statusTexts: FilesUploaderStatusTexts;
+  errorTexts: FilesUploaderErrorTexts;
+  imageElement?: HTMLImageElement;
+  remove(): void;
+}
+
+export interface CompleteWrapper extends Component<CompleteWrapperProps>, QueueElement {
+  status: FilesUploaderAvailableStatusesComplete;
+  setStatus(status: FilesUploaderAvailableStatusesComplete): void;
+  setError(errors: FilesUploaderErrorType[]): void;
+  getChildren(): CompleteComponent;
+  delete(pathRemove: string, headers: { [key: string]: string }, externalData: { [key: string]: string }): Promise<any>;
+}
+
+export interface UploadingComponentProps {
+  file: File;
+  imageElement?: HTMLImageElement;
+  upload(): void;
+  cancel(): void;
+}
+
+export interface UploadingComponent extends Component<UploadingComponentProps> {
+  setStatus(status: FilesUploaderAvailableStatusesUploading, statusText: string): void;
+  setError(errors: FilesUploaderErrorType[], errorTexts: FilesUploaderErrorInfo[]): void;
+  onChangePercent(percent: number): void;
+}
+
+export interface CompleteComponentProps {
+  imageElement?: HTMLImageElement;
+  data: FilesUploaderFileData;
+  remove(): void;
+}
+
+export interface CompleteComponent extends Component<CompleteComponentProps> {
+  setStatus(status: FilesUploaderAvailableStatusesComplete, statusText: string): void;
+  setError(errors: FilesUploaderErrorType[], errorTexts: FilesUploaderErrorInfo[]): void;
 }

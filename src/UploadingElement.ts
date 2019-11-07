@@ -1,36 +1,72 @@
-import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import {
+  ComponentFactory,
   FilesUploaderAvailableStatusesUploading,
-  FilesUploaderElement,
-  FilesUploaderErrorKeys,
-  FilesUploaderFileDataElement,
-  UploadingFileComponent
+  FilesUploaderFileData,
+  SubComponentInfo,
+  UploadingComponent,
+  UploadingComponentProps,
+  UploadingWrapper,
+  UploadingWrapperProps
 } from './interfaces/interfaces';
+import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
+import ComponentPerformer from './ComponentPerformer';
 import {
   addHeaders,
   calcPercentage,
   getFilesUploaderErrorInfo,
   transformObjectToSendData
 } from './functions/functions';
+import { createWrapperElement } from './functions/constructors';
 
-export default class UploadingElement implements FilesUploaderElement {
-  percent = 0;
-  wrapper: Element;
-  xhr: XMLHttpRequest | null = null;
+export class UploadingElement implements UploadingWrapper {
+  id: string;
+  props: UploadingWrapperProps;
   status: FilesUploaderAvailableStatusesUploading;
   errorTypes: FilesUploaderErrorType[] = [];
-  readonly file: File;
-  readonly numb: number;
-  component: UploadingFileComponent;
+  percent = 0;
+  xhr: XMLHttpRequest | null = null;
 
-  constructor(insertionPoint: Element, numb: number, file: File, component: UploadingFileComponent) {
-    this.numb = numb;
-    this.file = file;
-    this.component = component;
-    const wrapper = this.getWrapper(numb);
-    wrapper.appendChild(component.render());
-    insertionPoint.appendChild(wrapper);
-    this.wrapper = wrapper;
+  constructor(props: UploadingWrapperProps) {
+    this.props = props;
+  }
+
+  render(): HTMLElement {
+    return createWrapperElement(FilesUploaderTypeFile.Uploading);
+  }
+
+  setError(errors: FilesUploaderErrorType[]): void {
+    this.errorTypes = errors;
+    this.setStatus(FilesUploaderStatus.Error);
+    this.getChildren().setError(errors, getFilesUploaderErrorInfo(errors, this.props.errorTexts));
+  }
+
+  setStatus(status: FilesUploaderAvailableStatusesUploading): void {
+    ComponentPerformer.getRenderRoot(this).setAttribute('data-file-status', status);
+    this.status = status;
+    if (status !== FilesUploaderStatus.Error) {
+      this.errorTypes = [];
+    }
+    this.getChildren().setStatus(status, this.props.statusTexts[status]);
+  }
+
+  subComponents(): SubComponentInfo[] {
+    const propsChildren: UploadingComponentProps = {
+      file: this.props.file,
+      imageElement: this.props.imageElement,
+      upload: this.props.upload,
+      cancel: this.props.cancel
+    };
+    return [
+      {
+        key: ComponentPerformer.childrenKey,
+        componentAlias: this.props.componentChildFactoryAlias,
+        root: ComponentPerformer.getRenderRoot(this),
+        props: propsChildren
+      }
+    ];
+  }
+
+  componentDidMount(): void {
     this.setStatus(FilesUploaderStatus.WaitingUpload);
   }
 
@@ -38,37 +74,22 @@ export default class UploadingElement implements FilesUploaderElement {
     return this.errorTypes.length > 0;
   }
 
-  protected getWrapper(numb: number): Element {
-    const root = document.createElement('li');
-    root.setAttribute('data-index', numb.toString());
-    root.setAttribute('data-file-type', FilesUploaderTypeFile.Uploading);
-    return root;
-  }
-
   changePercent(percent: number) {
     this.percent = percent;
-    if (this.component.changePercent) {
-      this.component.changePercent(percent);
-    }
+    this.getChildren().onChangePercent(percent);
   }
 
-  setStatus(status: FilesUploaderAvailableStatusesUploading) {
-    this.wrapper.setAttribute('data-file-status', status);
-    this.status = status;
-    if (status !== FilesUploaderStatus.Error) {
-      this.errorTypes = [];
-    }
-    this.component.setStatus(status);
-  }
-
-  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys): void {
-    this.errorTypes = errors;
-    this.setStatus(FilesUploaderStatus.Error);
-    this.component.setError(getFilesUploaderErrorInfo(errors, listTextErrors));
+  protected onUploadError(error: FilesUploaderErrorType.Server | FilesUploaderErrorType.Network) {
+    const errors = [error];
+    this.setError(errors);
+    return {
+      errors,
+      fileName: this.props.file.name
+    };
   }
 
   async upload(path: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
-    return new Promise<FilesUploaderFileDataElement>((resolve, reject: (types: FilesUploaderErrorType[]) => void) => {
+    return new Promise<FilesUploaderFileData>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
       xhr.open('POST', path, true);
@@ -79,8 +100,11 @@ export default class UploadingElement implements FilesUploaderElement {
         if (xhr.status === 200) {
           resolve(xhr.response);
         } else {
-          reject([FilesUploaderErrorType.Server]);
+          reject(this.onUploadError(FilesUploaderErrorType.Server));
         }
+      };
+      xhr.onerror = () => {
+        this.onUploadError(FilesUploaderErrorType.Network);
       };
       xhr.upload.addEventListener(
         'progress',
@@ -93,7 +117,7 @@ export default class UploadingElement implements FilesUploaderElement {
       const sendData = transformObjectToSendData(
         'multipartForm',
         {
-          file: this.file
+          file: this.props.file
         },
         externalData
       );
@@ -107,8 +131,11 @@ export default class UploadingElement implements FilesUploaderElement {
     }
   }
 
-  destroy() {
-    this.component.destroy();
-    this.wrapper.remove();
+  getChildren(): UploadingComponent {
+    return ComponentPerformer.getChildComponent(this, ComponentPerformer.childrenKey) as UploadingComponent;
   }
 }
+
+export const factoryUploadingElement: ComponentFactory<UploadingWrapperProps, UploadingElement> = props => {
+  return new UploadingElement(props);
+};

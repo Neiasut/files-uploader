@@ -1,32 +1,73 @@
-import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
-import { addHeaders, getFilesUploaderErrorInfo, transformObjectToSendData } from './functions/functions';
 import {
-  CompleteFileComponent,
+  CompleteComponent,
+  CompleteComponentProps,
+  CompleteWrapper,
+  CompleteWrapperProps,
+  ComponentFactory,
   FilesUploaderAvailableStatusesComplete,
-  FilesUploaderElement,
-  FilesUploaderErrorKeys
+  SubComponentInfo
 } from './interfaces/interfaces';
+import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
+import ComponentPerformer from './ComponentPerformer';
+import { addHeaders, getFilesUploaderErrorInfo, transformObjectToSendData } from './functions/functions';
+import { createWrapperElement } from './functions/constructors';
 
-export default class CompleteElement implements FilesUploaderElement {
-  wrapper: Element;
-  pathFile: string;
-  component: CompleteFileComponent;
+export class CompleteElement implements CompleteWrapper {
+  id: string;
+  props: CompleteWrapperProps;
   status: FilesUploaderAvailableStatusesComplete;
   errorTypes: FilesUploaderErrorType[] = [];
-  constructor(pathFile: string, insertionPoint: Element, component: CompleteFileComponent) {
-    const wrapper = this.getWrapper();
-    wrapper.appendChild(component.render());
-    insertionPoint.appendChild(wrapper);
-    this.wrapper = wrapper;
-    this.pathFile = pathFile;
-    this.component = component;
+
+  constructor(props) {
+    this.props = props;
+  }
+
+  render(): HTMLElement {
+    return createWrapperElement(FilesUploaderTypeFile.Complete);
+  }
+
+  componentDidMount(): void {
     this.setStatus(FilesUploaderStatus.Complete);
   }
 
-  protected getWrapper(): Element {
-    const root = document.createElement('li');
-    root.setAttribute('data-file-type', FilesUploaderTypeFile.Complete);
-    return root;
+  setError(errors: FilesUploaderErrorType[]): void {
+    this.errorTypes = errors;
+    this.setStatus(FilesUploaderStatus.Error);
+    this.getChildren().setError(errors, getFilesUploaderErrorInfo(errors, this.props.errorTexts));
+  }
+
+  setStatus(status: FilesUploaderAvailableStatusesComplete): void {
+    ComponentPerformer.getRenderRoot(this).setAttribute('data-file-status', status);
+    this.status = status;
+    if (status !== FilesUploaderStatus.Error) {
+      this.errorTypes = [];
+    }
+    this.getChildren().setStatus(status, this.props.statusTexts[status]);
+  }
+
+  subComponents(): SubComponentInfo[] {
+    const childrenProps: CompleteComponentProps = {
+      imageElement: this.props.imageElement,
+      data: this.props.data,
+      remove: this.props.remove
+    };
+    return [
+      {
+        key: ComponentPerformer.childrenKey,
+        componentAlias: this.props.componentChildFactoryAlias,
+        props: childrenProps,
+        root: ComponentPerformer.getRenderRoot(this)
+      }
+    ];
+  }
+
+  onDeleteError(error: FilesUploaderErrorType.Server | FilesUploaderErrorType.Network) {
+    const errors = [error];
+    this.setError(errors);
+    return {
+      errors,
+      filePath: this.props.data.path
+    };
   }
 
   delete(
@@ -40,35 +81,26 @@ export default class CompleteElement implements FilesUploaderElement {
       xhr.open('DELETE', pathRemove, true);
       xhr.responseType = 'json';
       addHeaders(xhr, headers);
-      const info = transformObjectToSendData('json', { path: this.pathFile }, externalData);
+      const info = transformObjectToSendData('json', { path: this.props.data.path }, externalData);
       xhr.onload = () => {
         if (xhr.status !== 200) {
-          reject([FilesUploaderErrorType.Server]);
+          reject(this.onDeleteError(FilesUploaderErrorType.Server));
         } else {
           resolve(xhr.response);
         }
+      };
+      xhr.onerror = () => {
+        this.onDeleteError(FilesUploaderErrorType.Network);
       };
       xhr.send(info);
     });
   }
 
-  setStatus(status: FilesUploaderAvailableStatusesComplete) {
-    this.wrapper.setAttribute('data-file-status', status);
-    this.status = status;
-    if (status !== FilesUploaderStatus.Error) {
-      this.errorTypes = [];
-    }
-    this.component.setStatus(status);
-  }
-
-  setError(errors: FilesUploaderErrorType[], listTextErrors: FilesUploaderErrorKeys) {
-    this.errorTypes = errors;
-    this.setStatus(FilesUploaderStatus.Error);
-    this.component.setError(getFilesUploaderErrorInfo(errors, listTextErrors));
-  }
-
-  destroy() {
-    this.component.destroy();
-    this.wrapper.remove();
+  getChildren(): CompleteComponent {
+    return ComponentPerformer.getChildComponent(this, ComponentPerformer.childrenKey) as CompleteComponent;
   }
 }
+
+export const factoryCompleteElement: ComponentFactory<CompleteWrapperProps, CompleteElement> = props => {
+  return new CompleteElement(props);
+};

@@ -19,7 +19,6 @@ describe('FilesUploader test', () => {
   test('init error', () => {
     expect(() => {
       const instance = new FilesUploader('#testeed');
-      console.log(instance);
     }).toThrowError();
   });
 

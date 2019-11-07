@@ -1,76 +1,98 @@
-import CompleteElement from './CompleteElement';
+import { CompleteElement, factoryCompleteElement } from './CompleteElement';
 // @ts-ignore
-import mock from 'xhr-mock';
-import {factoryDefaultCompleteComponent} from './DefaultCompleteComponent';
-import {mockDefaultDiv, mockFilesUploaderErrorKeys, mockFilesUploaderFileDataElement} from './__mock__/structures';
-import {FilesUploaderErrorType} from './enums/enums';
+import mock, { delay } from 'xhr-mock';
+import { DefaultCompleteComponent, factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
+import { mockDefaultDiv, mockPropsCompleteElement } from './__mock__/structures';
+import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import ComponentPerformer from './ComponentPerformer';
 
-test('init & remove', () => {
+const COMPONENT_ALIAS = 'completeElement';
+const COMPONENT_CHILD_ALIAS = 'childElement';
+
+const mountComponent = props => {
   const div = mockDefaultDiv();
-  const someEl = document.createElement('div');
-  someEl.textContent = 'test';
-  const component = factoryDefaultCompleteComponent(mockFilesUploaderFileDataElement(), false);
-  const instance = new CompleteElement('test.txt', div, component);
-  expect(instance).toBeInstanceOf(CompleteElement);
-  expect(instance.wrapper).toBeInstanceOf(Element);
-  expect(instance.pathFile).toBe('test.txt');
-  instance.destroy();
-  expect((div as Node).childNodes.length).toBe(0);
-  const component2 = factoryDefaultCompleteComponent(mockFilesUploaderFileDataElement(), false);
-  const instance2 = new CompleteElement('test.text', div, component2);
-  instance2.destroy();
-  expect(div.childNodes.length).toBe(0);
-});
+  return ComponentPerformer.mountComponent(div, COMPONENT_ALIAS, props) as CompleteElement;
+};
 
-describe('network tests', () => {
-  beforeEach(() => {
-    mock.setup();
+describe('tests completeElement', () => {
+  beforeAll(() => {
+    ComponentPerformer.addFactory(COMPONENT_ALIAS, factoryCompleteElement);
+    ComponentPerformer.addFactory(COMPONENT_CHILD_ALIAS, factoryDefaultCompleteComponent);
   });
 
-  afterEach(() => {
-    mock.teardown();
+  test('init & componentDidMount', () => {
+    const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
+    const spyOnComponentDidMount = jest.spyOn(CompleteElement.prototype as any, 'componentDidMount');
+    const instance = mountComponent(props);
+    expect(ComponentPerformer.getRenderRoot(instance)).toBeInstanceOf(Element);
+    expect(spyOnComponentDidMount).toHaveBeenCalled();
+    spyOnComponentDidMount.mockRestore();
   });
 
-  test('success', async () => {
-    expect.assertions(1);
-    mock.delete('/test', {
-      status: 200,
-      body: JSON.stringify({ status: 'success' })
+  test('setStatus', () => {
+    const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
+    const instance = mountComponent(props);
+    const spyChildSetStatus = jest.spyOn(DefaultCompleteComponent.prototype as any, 'setStatus');
+    const childInstance = ComponentPerformer.getChildComponent(
+      instance,
+      ComponentPerformer.childrenKey
+    ) as DefaultCompleteComponent;
+    instance.setStatus(FilesUploaderStatus.Complete);
+    expect(spyChildSetStatus).toHaveBeenCalled();
+    expect(childInstance.status).toBe(FilesUploaderStatus.Complete);
+    expect(instance.errorTypes.length).toBe(0);
+    spyChildSetStatus.mockRestore();
+  });
+
+  test('setError', () => {
+    const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
+    const instance = mountComponent(props);
+    const spyChildSetError = jest.spyOn(DefaultCompleteComponent.prototype as any, 'setStatus');
+    const childInstance = ComponentPerformer.getChildComponent(
+      instance,
+      ComponentPerformer.childrenKey
+    ) as DefaultCompleteComponent;
+    instance.setError([FilesUploaderErrorType.Server]);
+    expect(spyChildSetError).toHaveBeenCalled();
+    expect(childInstance.status).toBe(FilesUploaderStatus.Error);
+    spyChildSetError.mockRestore();
+  });
+
+  describe('network tests', () => {
+    beforeEach(() => {
+      mock.setup();
     });
-    const div = document.createElement('div');
-    document.body.appendChild(div);
-    const someEl = document.createElement('div');
-    someEl.textContent = 'test';
-    const component = factoryDefaultCompleteComponent(mockFilesUploaderFileDataElement(), false);
-    const instance = new CompleteElement('test.txt', div, component);
-    const data = await instance.delete('/test', {}, {});
-    expect(data.status).toBe('success');
-  });
 
-  test('error', async () => {
-    expect.assertions(2);
-    mock.delete('/test', {
-      status: 412,
-      body: JSON.stringify(null)
+    afterEach(() => {
+      mock.teardown();
     });
-    const div = document.createElement('div');
-    document.body.appendChild(div);
-    const component = factoryDefaultCompleteComponent(mockFilesUploaderFileDataElement(), false);
-    const instance = new CompleteElement('test.txt', div, component);
-    try {
-      await instance.delete('/test', {}, {});
-    } catch (e) {
-      expect(Array.isArray(e)).toBeTruthy();
-      expect(e.length).toBe(1);
-    }
-  });
-});
 
-test('setError', () => {
-  const div = mockDefaultDiv();
-  const component = factoryDefaultCompleteComponent(mockFilesUploaderFileDataElement(), false);
-  const instance = new CompleteElement('test.txt', div, component);
-  instance.setError([FilesUploaderErrorType.Size], mockFilesUploaderErrorKeys());
-  expect(instance.errorTypes.length).toBe(1);
-  expect(instance.errorTypes[0]).toBe(FilesUploaderErrorType.Size);
+    test('success remove request', async () => {
+      expect.assertions(1);
+      mock.delete('/test', {
+        status: 200,
+        body: JSON.stringify({ status: 'success' })
+      });
+      const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
+      const instance = mountComponent(props);
+      const data = await instance.delete('/test', {}, {});
+      expect(data.status).toBe('success');
+    });
+
+    test('error remove request', async () => {
+      expect.assertions(2);
+      mock.delete('/test', {
+        status: 412,
+        body: JSON.stringify(null)
+      });
+      const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
+      const instance = mountComponent(props);
+      try {
+        await instance.delete('/test', {}, {});
+      } catch (e) {
+        expect(Array.isArray(e.errors)).toBeTruthy();
+        expect(e.errors.length).toBe(1);
+      }
+    });
+  });
 });

@@ -1,88 +1,88 @@
 import {
-  CompleteFileComponent,
+  CompleteComponent,
+  CompleteComponentProps,
+  ComponentFactory,
   FilesUploaderAvailableStatusesComplete,
-  FilesUploaderErrorInfo,
-  FilesUploaderFileDataElement
+  FilesUploaderErrorInfo
 } from './interfaces/interfaces';
-import EventDispatcher from './EventDispatcher';
-import { FilesUploaderStatus } from './enums/enums';
-import { filesUploaderComponent } from './functions/decorators';
+import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 import { createButtonAsString } from './functions/constructors';
+import ComponentPerformer from './ComponentPerformer';
 
-@filesUploaderComponent
-class DefaultCompleteComponent implements CompleteFileComponent {
+export class DefaultCompleteComponent implements CompleteComponent {
+  props: CompleteComponentProps;
   buttonRemove: HTMLButtonElement;
-  textError: HTMLElement;
-  wrapper: HTMLElement;
-  data: FilesUploaderFileDataElement;
-  imageView: boolean;
+  textErrorElement: HTMLElement;
   status: FilesUploaderAvailableStatusesComplete;
+  statusElement: HTMLElement;
 
-  onInit(data: FilesUploaderFileDataElement, imageView: boolean): void {
-    this.data = data;
-    this.imageView = imageView;
+  constructor(props) {
+    this.props = props;
   }
 
   render(): HTMLElement {
     const root = document.createElement('div');
     root.classList.add('FilesUploaderCompleteComponent');
-    root.innerHTML = `
-      ${
-        this.imageView
-          ? `<span class="FilesUploaderCompleteComponent-ImageWrapper"><img class="FilesUploaderCompleteComponent-Image" src="${this.data.path}" alt="download image" /></span>`
-          : ''
-      }
-      <span class="FilesUploaderCompleteComponent-Name">${this.data.name}</span>
-      <span class="FilesUploaderCompleteComponent-Errors"></span>
+    const { imageElement } = this.props;
+    if (imageElement) {
+      const wrapperImage = document.createElement('div');
+      wrapperImage.classList.add('FilesUploaderCompleteComponent-ImageWrapper');
+      imageElement.classList.add('FilesUploaderCompleteComponent-ImageWrapper');
+      wrapperImage.appendChild(imageElement);
+      root.appendChild(wrapperImage);
+    }
+    root.innerHTML += `
+      <div class="FilesUploaderCompleteComponent-Content">
+        <div class="FilesUploaderCompleteComponent-Name">${this.props.data.name}</div>
+        <div class="FilesUploaderUploadingComponent-Info">
+          <div class="FilesUploaderCompleteComponent-Status"></div>
+          <div class="FilesUploaderCompleteComponent-Errors"></div>
+        </div>
+      </div>
       <span class="FilesUploaderCompleteComponent-Actions">${createButtonAsString('remove', [
         'FilesUploaderComponentButton',
         'FilesUploaderCompleteComponent-Button'
       ])}</span>
     `;
-    this.buttonRemove = root.querySelector('button');
-    this.buttonRemove.addEventListener('click', this.handleClickRemove);
-    this.textError = root.querySelector('.FilesUploaderCompleteComponent-Errors');
-    this.wrapper = root;
     return root;
   }
 
-  destroy(): void {
-    this.buttonRemove.removeEventListener('click', this.handleClickRemove);
-    this.wrapper.remove();
+  setError(errors: FilesUploaderErrorType[], errorTexts?: FilesUploaderErrorInfo[]): void {
+    this.textErrorElement.textContent = errorTexts.map(element => element.text).join(', ');
   }
 
-  protected didCallRemoveDispatcher = new EventDispatcher();
-  onDidCallRemove(handler: () => void): void {
-    this.didCallRemoveDispatcher.register(handler);
+  setStatus(status: FilesUploaderAvailableStatusesComplete, statusText: string): void {
+    const root = ComponentPerformer.getRenderRoot(this);
+    if (status !== FilesUploaderStatus.Error) {
+      this.textErrorElement.textContent = '';
+    }
+    this.buttonRemove.disabled = status === FilesUploaderStatus.Removing;
+    root.classList.remove(`FilesUploaderCompleteComponent_status_${this.status}`);
+    root.classList.add(`FilesUploaderCompleteComponent_status_${status}`);
+    this.status = status;
+    this.statusElement.textContent = statusText;
   }
-  protected fireDidCallRemove() {
-    this.didCallRemoveDispatcher.fire();
+
+  componentDidMount(): void {
+    const root = ComponentPerformer.getRenderRoot(this);
+    this.buttonRemove = root.querySelector('button');
+    this.buttonRemove.addEventListener('click', this.handleClickRemove);
+    this.textErrorElement = root.querySelector('.FilesUploaderCompleteComponent-Errors');
+    this.statusElement = root.querySelector('.FilesUploaderCompleteComponent-Status');
+  }
+
+  componentWillUnmount(): void {
+    this.buttonRemove.removeEventListener('click', this.handleClickRemove);
   }
 
   protected handleClickRemove = () => {
-    this.fireDidCallRemove();
+    this.props.remove();
   };
-
-  setError(errorTexts: FilesUploaderErrorInfo[]): void {
-    this.textError.textContent = errorTexts.map(element => element.text).join(', ');
-  }
-
-  setStatus(status: FilesUploaderAvailableStatusesComplete): void {
-    if (status !== FilesUploaderStatus.Error) {
-      this.textError.textContent = '';
-    }
-    this.buttonRemove.disabled = status === FilesUploaderStatus.Removing;
-    this.wrapper.classList.remove(`FilesUploaderCompleteComponent_status_${this.status}`);
-    this.wrapper.classList.add(`FilesUploaderCompleteComponent_status_${status}`);
-    this.status = status;
-  }
 }
 
-export const factoryDefaultCompleteComponent = (
-  data: FilesUploaderFileDataElement,
-  imageView: boolean
-): DefaultCompleteComponent => {
-  const instance = new DefaultCompleteComponent();
-  instance.onInit(data, imageView);
-  return instance;
+export const factoryDefaultCompleteComponent: ComponentFactory<
+  CompleteComponentProps,
+  DefaultCompleteComponent
+> = props => {
+  return new DefaultCompleteComponent(props);
 };

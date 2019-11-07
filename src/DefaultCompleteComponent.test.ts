@@ -1,62 +1,84 @@
-import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
-import { mockDefaultDiv, mockFilesUploaderFileDataElement } from './__mock__/structures';
+import { DefaultCompleteComponent, factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
+import { mockDefaultDiv, mockPropsCompleteComponent } from './__mock__/structures';
 import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
+import ComponentPerformer from './ComponentPerformer';
+
+const COMPONENT_ALIAS = 'defaultCompleteComponent';
+const mountComponent = props => {
+  const div = mockDefaultDiv();
+  return ComponentPerformer.mountComponent(div, COMPONENT_ALIAS, props) as DefaultCompleteComponent;
+};
 
 test('render', () => {
-  const data = mockFilesUploaderFileDataElement();
-  const instance = factoryDefaultCompleteComponent(data, false);
+  const props = mockPropsCompleteComponent();
+  const instance = factoryDefaultCompleteComponent(props);
   const elementDOM = instance.render();
   expect(elementDOM).toBeInstanceOf(HTMLElement);
 });
 
-test('check param imageView', () => {
-  const data = mockFilesUploaderFileDataElement();
-  const instance = factoryDefaultCompleteComponent(data, false);
-  const elementDOM = instance.render();
-  expect(elementDOM.querySelector('.imageWrapper')).toBeNull();
-  const instance2 = factoryDefaultCompleteComponent(data, true);
-  const elementDOM2 = instance2.render();
-  expect(elementDOM2.querySelector('.FilesUploaderCompleteComponent-ImageWrapper')).toBeInstanceOf(HTMLElement);
-});
+describe('with performer', () => {
+  beforeAll(() => {
+    ComponentPerformer.addFactory(COMPONENT_ALIAS, factoryDefaultCompleteComponent);
+  });
 
-test('destroy', () => {
-  const data = mockFilesUploaderFileDataElement();
-  const instance = factoryDefaultCompleteComponent(data, false);
-  const div = mockDefaultDiv();
-  div.appendChild(instance.render());
-  instance.destroy();
-  expect(div.childNodes.length).toBe(0);
-});
+  test('check param imageView', () => {
+    const props = mockPropsCompleteComponent();
+    const instance = mountComponent(props);
+    expect(
+      ComponentPerformer.getRenderRoot(instance).querySelector('.FilesUploaderCompleteComponent-ImageWrapper')
+    ).toBeInstanceOf(Element);
+    const props2 = mockPropsCompleteComponent();
+    delete props2.imageElement;
+    const instance2 = mountComponent(props2);
+    expect(
+      ComponentPerformer.getRenderRoot(instance2).querySelector('.FilesUploaderCompleteComponent-ImageWrapper')
+    ).toBeNull();
+  });
 
-test('handleClickRemove', () => {
-  const data = mockFilesUploaderFileDataElement();
-  const instance = factoryDefaultCompleteComponent(data, false);
-  const render = instance.render();
-  const fn = jest.fn();
-  instance.onDidCallRemove(fn);
-  render.querySelector('button').dispatchEvent(new Event('click'));
-  expect(fn).toHaveBeenCalled();
-});
+  test('run component DidMount and DidUnmount', () => {
+    const props = mockPropsCompleteComponent();
+    const spyComponentDidMount = jest.spyOn(DefaultCompleteComponent.prototype as any, 'componentDidMount');
+    const spyComponentWillUnmount = jest.spyOn(DefaultCompleteComponent.prototype as any, 'componentWillUnmount');
+    const instance = mountComponent(props);
+    ComponentPerformer.unmountComponent(instance);
+    expect(spyComponentDidMount).toHaveBeenCalled();
+    expect(spyComponentWillUnmount).toHaveBeenCalled();
+    spyComponentDidMount.mockRestore();
+    spyComponentWillUnmount.mockRestore();
+  });
 
-test('setError & change status', () => {
-  const data = mockFilesUploaderFileDataElement();
-  const instance = factoryDefaultCompleteComponent(data, false);
-  const render = instance.render();
-  instance.setError([
-    {
-      type: FilesUploaderErrorType.Server,
-      text: 'server error'
-    },
-    {
-      type: FilesUploaderErrorType.Type,
-      text: 'type error'
-    }
-  ]);
-  expect(instance.textError.textContent).toBe('server error, type error');
-  instance.setStatus(FilesUploaderStatus.Complete);
-  expect(instance.textError.textContent).toBe('');
-  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeTruthy();
-  instance.setStatus(FilesUploaderStatus.Error);
-  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeFalsy();
-  expect(render.classList.contains(`FilesUploaderCompleteComponent_status_error`)).toBeTruthy();
+  test('handleClickRemove', () => {
+    const props = mockPropsCompleteComponent();
+    const cbRemove = jest.fn();
+    props.remove = cbRemove;
+    const instance = mountComponent(props);
+    instance.buttonRemove.dispatchEvent(new Event('click'));
+    expect(cbRemove).toHaveBeenCalled();
+  });
+
+  test('setError & change status', () => {
+    const props = mockPropsCompleteComponent();
+    const instance = mountComponent(props);
+    instance.setError(
+      [FilesUploaderErrorType.Server, FilesUploaderErrorType.Type],
+      [
+        {
+          type: FilesUploaderErrorType.Server,
+          text: 'server error'
+        },
+        {
+          type: FilesUploaderErrorType.Type,
+          text: 'type error'
+        }
+      ]
+    );
+    const root = ComponentPerformer.getRenderRoot(instance);
+    expect(instance.textErrorElement.textContent).toBe('server error, type error');
+    instance.setStatus(FilesUploaderStatus.Complete, 'complete');
+    expect(instance.textErrorElement.textContent).toBe('');
+    expect(root.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeTruthy();
+    instance.setStatus(FilesUploaderStatus.Error, 'error');
+    expect(root.classList.contains(`FilesUploaderCompleteComponent_status_complete`)).toBeFalsy();
+    expect(root.classList.contains(`FilesUploaderCompleteComponent_status_error`)).toBeTruthy();
+  });
 });

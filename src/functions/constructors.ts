@@ -34,3 +34,9 @@ export const createListWrapper = (type: FilesUploaderTypeFile, title?: string): 
 
 export const createButtonAsString = (text: string, classes: string[]): string =>
   `<button class="${classes.join(' ')}" type="button">${text}</button>`;
+
+export const createWrapperElement = (type: FilesUploaderTypeFile): HTMLLIElement => {
+  const li = document.createElement('li');
+  li.setAttribute('data-wrapper-element-type', type);
+  return li;
+};

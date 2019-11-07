@@ -74,6 +74,15 @@
     flex-wrap: wrap;
     align-items: flex-start;
   }
+  &-ImageWrapper{
+    width: 4rem;
+    height: 4rem;
+  }
+  &-Image{
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
   &_status_error{
     .FilesUploaderUploadingComponent-Errors{
       display: block;

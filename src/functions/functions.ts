@@ -1,4 +1,4 @@
-import { FilesUploaderErrorInfo, FilesUploaderErrorKeys, FilesUploaderFileInfo } from '../interfaces/interfaces';
+import { FilesUploaderErrorInfo, FilesUploaderErrorTexts, FilesUploaderFileInfo } from '../interfaces/interfaces';
 import { FilesUploaderErrorType } from '../enums/enums';
 
 export const mergeDeepConfig = (...objects) => {
@@ -61,7 +61,7 @@ export const calcPercentage = (upload: number, all: number, round: number = 2) =
 
 export const getFilesUploaderErrorInfo = (
   errors: FilesUploaderErrorType[],
-  texts: FilesUploaderErrorKeys
+  texts: FilesUploaderErrorTexts
 ): FilesUploaderErrorInfo[] => {
   return errors.map(error => ({
     type: error,
@@ -122,4 +122,45 @@ export const getQueryElement = (element: HTMLInputElement | string): HTMLInputEl
     return element;
   }
   return false;
+};
+
+export const imageFromFile = (file: File): HTMLImageElement => {
+  const image = document.createElement('img');
+  image.src = URL.createObjectURL(file);
+  return image;
+};
+
+export const checkFileIsImage = (file: File): boolean => file && file.type.split('/')[0] === 'image';
+
+// tslint:disable-next-line: ban-types
+export const checkOnFunction = (f: any): f is Function => typeof f === 'function';
+
+export const createImage = (src: string) => {
+  const img = document.createElement('img');
+  img.src = src;
+  return img;
+};
+
+export const checkExtensionInArrAllowed = (extension: string, arrAllowed: string[]): boolean =>
+  arrAllowed.includes(extension.toLowerCase());
+
+export const getElementImage = (
+  imageView: boolean,
+  availableExtensions: string[] | null,
+  extension: string | null,
+  file: File | null,
+  pathImage: string | null
+): HTMLImageElement => {
+  if (imageView) {
+    if (checkFileIsImage(file)) {
+      return imageFromFile(file);
+    }
+    if (
+      Array.isArray(availableExtensions) &&
+      typeof extension === 'string' &&
+      checkExtensionInArrAllowed(extension, availableExtensions)
+    ) {
+      return createImage(pathImage);
+    }
+  }
 };

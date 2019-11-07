@@ -1,28 +1,27 @@
-import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
-import { mockDefaultDiv, mockFilesUploaderFileData } from './__mock__/structures';
+import { DefaultUploadingComponent, factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
+import { mockDefaultDiv, mockPropsUploadingComponent } from './__mock__/structures';
+import ComponentPerformer from './ComponentPerformer';
 
 test('render', () => {
-  const instance = factoryDefaultUploadingComponent(mockFilesUploaderFileData());
+  const props = mockPropsUploadingComponent();
+  const instance = factoryDefaultUploadingComponent(props);
   const render = instance.render();
   expect(render).toBeInstanceOf(HTMLElement);
 });
 
-test('destroy', () => {
-  const div = mockDefaultDiv();
-  const instance = factoryDefaultUploadingComponent(mockFilesUploaderFileData());
-  div.appendChild(instance.render());
-  instance.destroy();
-  expect(div.childNodes.length).toBe(0);
-});
-
 test('functions', () => {
+  ComponentPerformer.addFactory('defaultUploadingComponent', factoryDefaultUploadingComponent);
   const div = mockDefaultDiv();
-  const instance = factoryDefaultUploadingComponent(mockFilesUploaderFileData());
+  const props = mockPropsUploadingComponent();
   const cbCancel = jest.fn();
   const cbUpload = jest.fn();
-  instance.onDidCallCancel(cbCancel);
-  instance.onDidCallUpload(cbUpload);
-  const render = instance.render();
+  props.cancel = cbCancel;
+  props.upload = cbUpload;
+  const instance = ComponentPerformer.mountComponent(
+    div,
+    'defaultUploadingComponent',
+    props
+  ) as DefaultUploadingComponent;
   instance.buttonCancel.dispatchEvent(new Event('click'));
   instance.buttonUpload.dispatchEvent(new Event('click'));
   expect(cbCancel).toHaveBeenCalled();

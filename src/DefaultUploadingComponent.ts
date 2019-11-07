@@ -1,37 +1,49 @@
-import EventDispatcher from './EventDispatcher';
 import {
+  ComponentFactory,
   FilesUploaderAvailableStatusesUploading,
   FilesUploaderErrorInfo,
-  FilesUploaderFileInfo,
-  UploadingFileComponent
+  UploadingComponent,
+  UploadingComponentProps
 } from './interfaces/interfaces';
-import { filesUploaderComponent } from './functions/decorators';
+import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 import { createButtonAsString } from './functions/constructors';
-import { FilesUploaderStatus } from './enums/enums';
+import ComponentPerformer from './ComponentPerformer';
 
-@filesUploaderComponent
-class DefaultUploadingComponent implements UploadingFileComponent {
+export class DefaultUploadingComponent implements UploadingComponent {
+  props: UploadingComponentProps;
+  status: FilesUploaderAvailableStatusesUploading;
+  errors: FilesUploaderErrorType[];
   buttonUpload: HTMLButtonElement;
   buttonCancel: HTMLButtonElement;
-  wrapper: HTMLElement;
-  data: FilesUploaderFileInfo;
-  textError: HTMLElement;
-  status: FilesUploaderAvailableStatusesUploading;
+  textErrorElement: HTMLElement;
   percentageElement: HTMLElement;
+  statusElement: HTMLElement;
 
-  onInit(data): void {
-    this.data = data;
+  constructor(props) {
+    this.props = props;
   }
 
   render(): HTMLElement {
     const wrapper = document.createElement('div');
-    this.wrapper = wrapper;
-    this.wrapper.classList.add('FilesUploaderUploadingComponent');
-    wrapper.innerHTML = `
-      <span class="FilesUploaderUploadingComponent-Name">${this.data.name}</span>
-      <span class="FilesUploaderUploadingComponent-Percentage"></span>
-      <span class="FilesUploaderUploadingComponent-Errors"></span>
-      <span class="FilesUploaderUploadingComponent-Buttons">
+    wrapper.classList.add('FilesUploaderUploadingComponent');
+    const { imageElement } = this.props;
+    if (imageElement) {
+      const wrapperImage = document.createElement('div');
+      wrapperImage.classList.add('FilesUploaderUploadingComponent-ImageWrapper');
+      imageElement.classList.add('FilesUploaderUploadingComponent-Image');
+      wrapperImage.appendChild(imageElement);
+      wrapper.appendChild(wrapperImage);
+    }
+    wrapper.innerHTML += `
+      <div class="FilesUploaderUploadingComponent-Content">
+        <div class="FilesUploaderUploadingComponent-Name">${this.props.file.name}</div>
+        <div class="FilesUploaderUploadingComponent-Info">
+          <div class="FilesUploaderUploadingComponent-Status"></div>
+          <div class="FilesUploaderUploadingComponent-Errors"></div>
+        </div>
+        <span class="FilesUploaderUploadingComponent-Percentage"></span>
+      </div>
+      <div class="FilesUploaderUploadingComponent-Buttons">
         ${createButtonAsString('upload', [
           'FilesUploaderComponentButton',
           'FilesUploaderUploadingComponent-Button',
@@ -42,71 +54,62 @@ class DefaultUploadingComponent implements UploadingFileComponent {
           'FilesUploaderUploadingComponent-Button',
           'FilesUploaderUploadingComponent-Button_target_cancel'
         ])}
-      </span>
+      </div>
     `;
-    this.buttonUpload = wrapper.querySelector('.FilesUploaderUploadingComponent-Button_target_upload');
-    this.buttonCancel = wrapper.querySelector('.FilesUploaderUploadingComponent-Button_target_cancel');
-    this.textError = wrapper.querySelector('.FilesUploaderUploadingComponent-Errors');
-    this.percentageElement = wrapper.querySelector('.FilesUploaderUploadingComponent-Percentage');
-
-    this.buttonCancel.addEventListener('click', this.handleClickCancel);
-    this.buttonUpload.addEventListener('click', this.handleClickUpload);
 
     return wrapper;
   }
 
-  destroy(): void {
-    this.buttonCancel.removeEventListener('click', this.handleClickCancel);
-    this.buttonUpload.removeEventListener('click', this.handleClickUpload);
-    this.wrapper.remove();
-  }
-
-  protected didCallUploadDispatcher = new EventDispatcher();
-  onDidCallUpload(handler) {
-    this.didCallUploadDispatcher.register(handler);
-  }
-  protected fireDidCallUpload() {
-    this.didCallUploadDispatcher.fire();
-  }
-
-  protected didCallCancelDispatcher = new EventDispatcher();
-  onDidCallCancel(handler) {
-    this.didCallCancelDispatcher.register(handler);
-  }
-  protected fireDidCallCancel() {
-    this.didCallCancelDispatcher.fire();
-  }
-
-  changePercent(percent: number): void {
-    this.percentageElement.textContent = `${percent}%`;
-  }
-
   protected handleClickUpload = () => {
-    this.fireDidCallUpload();
+    this.props.upload();
   };
 
   protected handleClickCancel = () => {
-    this.fireDidCallCancel();
+    this.props.cancel();
   };
 
-  setStatus(status: FilesUploaderAvailableStatusesUploading): void {
-    if (status !== FilesUploaderStatus.Error) {
-      this.textError.textContent = '';
-    }
-    this.buttonUpload.hidden = status !== FilesUploaderStatus.WaitingUpload;
-    this.wrapper.classList.remove(`FilesUploaderUploadingComponent_status_${this.status}`);
-    this.wrapper.classList.add(`FilesUploaderUploadingComponent_status_${status}`);
-    this.status = status;
+  componentDidMount(): void {
+    const root = ComponentPerformer.getRenderRoot(this);
+    this.buttonUpload = root.querySelector('.FilesUploaderUploadingComponent-Button_target_upload');
+    this.buttonCancel = root.querySelector('.FilesUploaderUploadingComponent-Button_target_cancel');
+    this.textErrorElement = root.querySelector('.FilesUploaderUploadingComponent-Errors');
+    this.percentageElement = root.querySelector('.FilesUploaderUploadingComponent-Percentage');
+    this.statusElement = root.querySelector('.FilesUploaderUploadingComponent-Status');
+
+    this.buttonCancel.addEventListener('click', this.handleClickCancel);
+    this.buttonUpload.addEventListener('click', this.handleClickUpload);
   }
 
-  setError(errorTexts: FilesUploaderErrorInfo[]): void {
-    this.textError.textContent = errorTexts.map(element => element.text).join(', ');
+  componentWillUnmount(): void {
+    this.buttonCancel.removeEventListener('click', this.handleClickCancel);
+    this.buttonUpload.removeEventListener('click', this.handleClickUpload);
+  }
+
+  setError(errors: FilesUploaderErrorType[], errorTexts: FilesUploaderErrorInfo[]): void {
+    this.errors = errors;
+    this.textErrorElement.textContent = errorTexts.map(element => element.text).join(', ');
+  }
+
+  setStatus(status: FilesUploaderAvailableStatusesUploading, statusText: string): void {
+    const root = ComponentPerformer.getRenderRoot(this);
+    if (status !== FilesUploaderStatus.Error) {
+      this.textErrorElement.textContent = '';
+    }
+    this.buttonUpload.hidden = status !== FilesUploaderStatus.WaitingUpload;
+    root.classList.remove(`FilesUploaderUploadingComponent_status_${this.status}`);
+    root.classList.add(`FilesUploaderUploadingComponent_status_${status}`);
+    this.status = status;
+    this.statusElement.textContent = statusText;
+  }
+
+  onChangePercent(percent: number): void {
+    this.percentageElement.textContent = `${percent} %`;
   }
 }
 
-export const factoryDefaultUploadingComponent = (data: FilesUploaderFileInfo): DefaultUploadingComponent => {
-  const instance = new DefaultUploadingComponent();
-  instance.onInit(data);
-
-  return instance;
+export const factoryDefaultUploadingComponent: ComponentFactory<
+  UploadingComponentProps,
+  DefaultUploadingComponent
+> = props => {
+  return new DefaultUploadingComponent(props);
 };

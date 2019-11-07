@@ -1,8 +1,16 @@
 import {
   calcPercentage,
+  checkExtensionInArrAllowed,
+  checkFileIsImage,
+  checkOnFunction,
+  createImage,
   generateRandomString,
+  getElementImage,
   getFileExtension,
-  getFilesUploaderErrorInfo, getFilesUploaderFileInfoFromInstanceFile, getQueryElement,
+  getFilesUploaderErrorInfo,
+  getFilesUploaderFileInfoFromInstanceFile,
+  getQueryElement,
+  imageFromFile,
   mergeDeepConfig,
   setInput,
   transformObjectToSendData,
@@ -10,7 +18,7 @@ import {
   validateFileSize
 } from './functions';
 import { FilesUploaderErrorType } from '../enums/enums';
-import { mockDefaultFile, mockFilesUploaderErrorKeys } from '../__mock__/structures';
+import { mockDefaultFile, mockFilesUploaderErrorTexts } from '../__mock__/structures';
 
 test('mergeDeepConfig', () => {
   const a = {
@@ -75,7 +83,7 @@ test('calcPercentage', () => {
 });
 
 test('getFilesUploaderErrorInfo', () => {
-  const texts = mockFilesUploaderErrorKeys();
+  const texts = mockFilesUploaderErrorTexts();
   expect(getFilesUploaderErrorInfo([FilesUploaderErrorType.Server], texts)).toBeInstanceOf(Object);
   expect(
     getFilesUploaderErrorInfo([FilesUploaderErrorType.Server, FilesUploaderErrorType.MoreMaxFiles], texts).length
@@ -117,4 +125,63 @@ test('getQueryElement', () => {
   expect(getQueryElement(input)).toBeInstanceOf(HTMLInputElement);
   expect(getQueryElement('#someId')).toBeFalsy();
   expect(getQueryElement('.arr')).toBeFalsy();
+});
+
+test('imageFromFile', () => {
+  window.URL.createObjectURL = jest.fn();
+  const file = mockDefaultFile();
+  const image = imageFromFile(file);
+  expect(image).toBeInstanceOf(HTMLImageElement);
+});
+
+test('checkFileIsImage', () => {
+  const file = new File([], 'test.txt', {
+    type: 'text/plain'
+  });
+  const fileImage = new File([], 'test.jpg', {
+    type: 'image/jpg'
+  });
+  expect(checkFileIsImage(file)).toBeFalsy();
+  expect(checkFileIsImage(fileImage)).toBeTruthy();
+});
+
+test('checkOnFunction', () => {
+  expect(checkOnFunction(1)).toBeFalsy();
+  expect(checkOnFunction('str')).toBeFalsy();
+  expect(checkOnFunction(() => null)).toBeTruthy();
+});
+
+test('createImage', () => {
+  const SRC = '/test.png';
+  const image = createImage(SRC);
+  expect(image).toBeInstanceOf(HTMLImageElement);
+  expect(image.src.indexOf(SRC)).not.toBe(-1);
+});
+
+test('checkExtensionInArrAllowed', () => {
+  expect(checkExtensionInArrAllowed('txt', ['txt'])).toBeTruthy();
+  expect(checkExtensionInArrAllowed('txt', ['svg', 'jpg'])).toBeFalsy();
+  expect(checkExtensionInArrAllowed('', ['svg', 'jpg'])).toBeFalsy();
+  expect(checkExtensionInArrAllowed('', [])).toBeFalsy();
+});
+
+test('getElementImage', () => {
+  window.URL.createObjectURL = jest.fn();
+  const fileImage = new File([], 'test.jpg', {
+    type: 'image/jpg'
+  });
+  expect(getElementImage(false, null, null, null, null)).toBeUndefined();
+  expect(getElementImage(true, [], 'jpg', fileImage, null)).toBeInstanceOf(HTMLImageElement);
+  expect(getElementImage(true, ['jpg'], 'jpg', null, '/test.png')).toBeInstanceOf(HTMLImageElement);
+  expect(getElementImage(true, ['svg'], 'jpg', null, '/test.png')).toBeUndefined();
+});
+
+test('getFilesUploaderFileInfoFromInstanceFile', () => {
+  const file = new File([], 'test.jpg', {
+    type: 'image/jpg'
+  });
+  const data = getFilesUploaderFileInfoFromInstanceFile(file);
+  expect(data.name).toBe('test.jpg');
+  expect(data.size).toBe(file.size);
+  expect(data.extension).toBe('jpg');
 });

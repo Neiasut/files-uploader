@@ -1,14 +1,17 @@
-import { FilesUploaderErrorType } from '../enums/enums';
+import { FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
 import {
-  FilesUploaderErrorKeys,
+  CompleteComponentProps,
+  CompleteWrapperProps,
+  FilesUploaderErrorTexts,
   FilesUploaderFileData,
-  FilesUploaderFileDataElement,
-  FilesUploaderSettings
+  FilesUploaderSettings,
+  FilesUploaderStatusTexts,
+  QueueElement,
+  UploadingComponentProps,
+  UploadingWrapperProps
 } from '../interfaces/interfaces';
 import FilesUploader from '../FilesUploader';
-import UploadingElement from '../UploadingElement';
-import { factoryDefaultUploadingComponent } from '../DefaultUploadingComponent';
-import { getFilesUploaderFileInfoFromInstanceFile } from '../functions/functions';
+import { createImage } from '../functions/functions';
 
 export const mockDefaultInput = (): HTMLInputElement => {
   const input = document.createElement('input');
@@ -24,31 +27,28 @@ export const mockDefaultDiv = (): HTMLDivElement => {
   return div;
 };
 
-export const mockFilesUploaderErrorKeys = (): FilesUploaderErrorKeys => ({
+export const mockFilesUploaderStatusTexts = (): FilesUploaderStatusTexts => ({
+  [FilesUploaderStatus.Complete]: 'some text',
+  [FilesUploaderStatus.Error]: 'some text 2',
+  [FilesUploaderStatus.Removing]: 'some text 3',
+  [FilesUploaderStatus.WaitingUpload]: 'some text 4',
+  [FilesUploaderStatus.Uploading]: 'some text 5'
+});
+
+export const mockFilesUploaderErrorTexts = (): FilesUploaderErrorTexts => ({
   [FilesUploaderErrorType.Server]: 'some text',
   [FilesUploaderErrorType.Size]: 'some text 2',
   [FilesUploaderErrorType.MoreMaxFiles]: 'some text 3',
-  [FilesUploaderErrorType.Type]: 'some text 4'
+  [FilesUploaderErrorType.Type]: 'some text 4',
+  [FilesUploaderErrorType.Network]: 'some text 5'
 });
 
 export const mockDefaultFile = (): File => {
-  const parts = [
-    new Blob(['you construct a file...'], { type: 'text/plain' }),
-    ' Same way as you do with blob',
-    new Uint16Array([33])
-  ];
+  const parts = [new Blob(['you construct a file...'], { type: 'text/plain' }), new Uint16Array([33])];
   return new File(parts, 'foo.txt', {
     type: 'text/plain'
   });
 };
-
-export const mockFilesUploaderFileDataElement = (): FilesUploaderFileDataElement => ({
-  id: 'someid90',
-  name: 'foo.txt',
-  path: '/somePath/foo.txt',
-  size: 4,
-  extension: 'txt'
-});
 
 export const mockFilesUploaderFileData = (): FilesUploaderFileData => ({
   name: 'foo.txt',
@@ -65,8 +65,39 @@ export const mockInstanceFilesUploader = (
   return new FilesUploader('#test', settings, themes);
 };
 
-export const mockLoadingComponent = (numb = 0): UploadingElement => {
-  const file = mockDefaultFile();
-  const instance = factoryDefaultUploadingComponent(getFilesUploaderFileInfoFromInstanceFile(file));
-  return new UploadingElement(document.body, numb, file, instance);
-};
+export const mockQueueElement = (id: string, status = FilesUploaderStatus.Complete): QueueElement => ({
+  status,
+  id
+});
+
+export const mockPropsUploadingComponent = (): UploadingComponentProps => ({
+  file: mockDefaultFile(),
+  cancel: jest.fn(),
+  upload: jest.fn()
+});
+
+export const mockPropsCompleteComponent = (): CompleteComponentProps => ({
+  imageElement: createImage('/test.jpg'),
+  data: mockFilesUploaderFileData(),
+  remove: jest.fn()
+});
+
+export const mockPropsUploadingElement = (factoryChildAlias: string): UploadingWrapperProps => ({
+  file: mockDefaultFile(),
+  componentChildFactoryAlias: factoryChildAlias,
+  statusTexts: mockFilesUploaderStatusTexts(),
+  errorTexts: mockFilesUploaderErrorTexts(),
+  imageElement: createImage('/test.png'),
+  upload: jest.fn(),
+  cancel: jest.fn()
+});
+
+export const mockPropsCompleteElement = (factoryChildAlias: string): CompleteWrapperProps => ({
+  file: mockDefaultFile(),
+  imageElement: createImage('/test.png'),
+  data: mockFilesUploaderFileData(),
+  componentChildFactoryAlias: factoryChildAlias,
+  remove: jest.fn(),
+  statusTexts: mockFilesUploaderStatusTexts(),
+  errorTexts: mockFilesUploaderErrorTexts()
+});

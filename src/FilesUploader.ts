@@ -1,6 +1,6 @@
 import './styles/FilesUploader.scss';
 import {
-  getFilesUploaderFileInfoFromInstanceFile,
+  getElementImage,
   getQueryElement,
   mergeDeepConfig,
   setInput,
@@ -9,28 +9,48 @@ import {
 } from './functions/functions';
 import { createListElements, createListWrapper, createLoader } from './functions/constructors';
 import {
+  CompleteWrapper,
+  CompleteWrapperProps,
   FilesUploaderAddFileEvent,
   FilesUploaderAddFileToQueueEvent,
   FilesUploaderFileData,
   FilesUploaderListElements,
-  FilesUploaderSettings
+  FilesUploaderSettings,
+  UploadingWrapper,
+  UploadingWrapperProps
 } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
-import UploadingElement from './UploadingElement';
+import {
+  FilesUploaderErrorType,
+  FilesUploaderStatus,
+  FilesUploaderTypeFile,
+  FilesUploaderDefaultComponentAliases
+} from './enums/enums';
 import Queue from './Queue';
-import CompleteList from './CompleteList';
-import CompleteElement from './CompleteElement';
 import EventDispatcher, { Handler } from './EventDispatcher';
 import Themes from './Themes';
+import ComponentPerformer from './ComponentPerformer';
+import { factoryUploadingElement } from './UploadingElement';
+import { factoryCompleteElement } from './CompleteElement';
 import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
 import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
+
+ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.UploadingElement, factoryUploadingElement);
+ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.CompleteElement, factoryCompleteElement);
+ComponentPerformer.addFactory(
+  FilesUploaderDefaultComponentAliases.DefaultUploadingComponent,
+  factoryDefaultUploadingComponent
+);
+ComponentPerformer.addFactory(
+  FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
+  factoryDefaultCompleteComponent
+);
 
 export default class FilesUploader {
   elements: FilesUploaderListElements;
   settings: FilesUploaderSettings;
   configuration: FilesUploaderSettings;
-  private queue = new Queue();
-  files = new CompleteList();
+  private queue: Queue<UploadingWrapper> = new Queue();
+  files: Queue<CompleteWrapper> = new Queue();
   private counterLoadFiles = 0;
 
   constructor(
@@ -66,9 +86,9 @@ export default class FilesUploader {
         completeList: 'List files'
       },
       statusTexts: {
-        [FilesUploaderStatus.WaitingUpload]: 'Wait Upload',
-        [FilesUploaderStatus.Uploading]: 'Uploading files',
-        [FilesUploaderStatus.Complete]: 'Complete downloading files',
+        [FilesUploaderStatus.WaitingUpload]: 'Waiting upload',
+        [FilesUploaderStatus.Uploading]: 'Uploading file',
+        [FilesUploaderStatus.Complete]: 'File on server',
         [FilesUploaderStatus.Error]: 'Error',
         [FilesUploaderStatus.Removing]: 'Removing'
       },
@@ -76,14 +96,15 @@ export default class FilesUploader {
         [FilesUploaderErrorType.MoreMaxFiles]: 'More max files',
         [FilesUploaderErrorType.Size]: 'More max size file',
         [FilesUploaderErrorType.Type]: 'Not type',
-        [FilesUploaderErrorType.Server]: 'Server error'
+        [FilesUploaderErrorType.Server]: 'Server error',
+        [FilesUploaderErrorType.Network]: 'Network error'
       },
       maxFiles: 3,
       maxSize: 10 * 1024 * 1024,
       maxParallelUploads: 3,
       autoUpload: false,
-      factoryUploadingComponent: factoryDefaultUploadingComponent,
-      factoryCompleteComponent: factoryDefaultCompleteComponent,
+      factoryUploadingComponentAlias: FilesUploaderDefaultComponentAliases.DefaultUploadingComponent,
+      factoryCompleteComponentAlias: FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
       imageView: false,
       headersLoad: {},
       headersRemove: {},
@@ -164,16 +185,36 @@ export default class FilesUploader {
   }
 
   private addFileToQueue(file: File) {
-    const { maxSize, acceptTypes, maxFiles, factoryUploadingComponent, autoUpload } = this.configuration;
+    const {
+      maxSize,
+      acceptTypes,
+      maxFiles,
+      factoryUploadingComponentAlias,
+      autoUpload,
+      statusTexts,
+      errorTexts,
+      imageView
+    } = this.configuration;
     this.counterLoadFiles += 1;
-    const loadingComponent = factoryUploadingComponent(getFilesUploaderFileInfoFromInstanceFile(file));
-    loadingComponent.onDidCallUpload(() => {
-      this.uploadFile(element);
-    });
-    loadingComponent.onDidCallCancel(() => {
-      this.removeQueueFile(element);
-    });
-    const element = new UploadingElement(this.elements.uploadingList, this.counterLoadFiles, file, loadingComponent);
+    const imageElement = getElementImage(imageView, null, null, file, null);
+    const props: UploadingWrapperProps = {
+      file,
+      statusTexts,
+      errorTexts,
+      componentChildFactoryAlias: factoryUploadingComponentAlias,
+      imageElement,
+      upload: () => {
+        this.uploadFile(element, file);
+      },
+      cancel: () => {
+        this.removeQueueFile(element);
+      }
+    };
+    const element = ComponentPerformer.mountComponent(
+      this.elements.uploadingList,
+      FilesUploaderDefaultComponentAliases.UploadingElement,
+      props
+    ) as UploadingWrapper;
     this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
     if (!validateFileSize(file, maxSize)) {
@@ -186,58 +227,73 @@ export default class FilesUploader {
       errorTypes.push(FilesUploaderErrorType.MoreMaxFiles);
     }
     if (errorTypes.length > 0) {
-      this.setErrorToElementQueue(element, errorTypes);
+      element.setError(errorTypes);
     }
     this.fireDidAddFileToQueue({
       instance: this
     });
     if (autoUpload && !element.error) {
-      this.uploadFile(element);
+      this.uploadFile(element, file);
     }
   }
 
-  private setErrorToElementQueue(element: UploadingElement, errors: FilesUploaderErrorType[]) {
-    element.setError(errors, this.configuration.errorTexts);
-  }
-
-  private uploadFile(element: UploadingElement) {
+  private uploadFile(element: UploadingWrapper, file?: File) {
     const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
     if (!element.error) {
-      element.setStatus(FilesUploaderStatus.Uploading);
       element
         .upload(actionLoad, headersLoad, externalDataLoad)
         .then(dataResponse => {
           this.removeQueueFile(element);
-          this.addFile(dataResponse);
+          this.addFile(dataResponse, file);
         })
-        .catch((reasons: FilesUploaderErrorType[]) => {
-          this.setErrorToElementQueue(element, reasons);
+        .catch(reasons => {
+          throw new Error(`Upload error file name: "${reasons.fileName}"`);
         });
     }
   }
 
-  private removeQueueFile(element: UploadingElement) {
+  private removeQueueFile(element: UploadingWrapper) {
     element.abort();
-    element.destroy();
-    this.queue.remove(element.numb);
+    this.queue.remove(element.id);
+    ComponentPerformer.unmountComponent(element);
   }
 
-  addFile(data: FilesUploaderFileData) {
-    const { actionRemove, headersRemove, externalDataRemove, factoryCompleteComponent, imageView } = this.configuration;
-    const info = this.files.add(data);
-    const fileCompleteComponent = factoryCompleteComponent(info, imageView);
-    const fileInstance = new CompleteElement(data.path, this.elements.completeList, fileCompleteComponent);
-    fileCompleteComponent.onDidCallRemove(() => {
-      fileInstance
-        .delete(actionRemove, headersRemove, externalDataRemove)
-        .then(() => {
-          fileInstance.destroy();
-          this.files.remove(info.id);
-        })
-        .catch(() => {
-          fileInstance.setError([FilesUploaderErrorType.Server], this.configuration.errorTexts);
-        });
-    });
+  addFile(data: FilesUploaderFileData, file?: File) {
+    const {
+      actionRemove,
+      headersRemove,
+      externalDataRemove,
+      factoryCompleteComponentAlias,
+      imageView,
+      statusTexts,
+      errorTexts
+    } = this.configuration;
+    const imageElement = getElementImage(imageView, FilesUploader.imageExtensions, data.extension, null, data.path);
+    const props: CompleteWrapperProps = {
+      componentChildFactoryAlias: factoryCompleteComponentAlias,
+      statusTexts,
+      errorTexts,
+      file,
+      imageElement,
+      data,
+      remove: () => {
+        element
+          .delete(actionRemove, headersRemove, externalDataRemove)
+          .then(() => {
+            ComponentPerformer.unmountComponent(element);
+            this.files.remove(element.id);
+          })
+          .catch(e => {
+            throw new Error(`Delete error file ${e.filePath}`);
+          });
+      }
+    };
+    const element = ComponentPerformer.mountComponent(
+      this.elements.completeList,
+      FilesUploaderDefaultComponentAliases.CompleteElement,
+      props
+    ) as CompleteWrapper;
+    this.files.add(element);
     this.fireDidAddFile({
       instance: this
     });
@@ -264,4 +320,6 @@ export default class FilesUploader {
       this.addFile(file);
     });
   }
+
+  static imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 }
