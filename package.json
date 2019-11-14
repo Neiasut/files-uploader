@@ -14,6 +14,13 @@
     "pack-all": "npm run build-prod && npm run build-dev",
     "lint": "tslint -p ./ --fix"
   },
+  "keywords": [
+    "upload",
+    "file",
+    "drag",
+    "drop",
+    "typescript"
+  ],
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint & npm run test"
