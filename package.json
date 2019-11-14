@@ -9,8 +9,8 @@
     "watch:dev-server": "webpack-dev-server --config ./config/webpack/webpack.config.js --inline --hot --mode development --devServer",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "build-dev": "webpack --config ./config/webpack/webpack.config.js --mode development",
-    "build-prod": "webpack --config ./config/webpack/webpack.config.js --mode production",
+    "build-dev": "webpack --config ./config/webpack/webpack.config.js --mode development --build",
+    "build-prod": "webpack --config ./config/webpack/webpack.config.js --mode production --build",
     "pack-all": "npm run build-prod && npm run build-dev"
   },
   "husky": {

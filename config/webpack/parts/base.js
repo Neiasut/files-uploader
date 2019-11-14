@@ -16,14 +16,14 @@ module.exports = function(argv) {
 
   if (prod) {
     entry = {
-      'fileUploader.min': rootPath + '/src/FilesUploader.ts'
+      'filesUploader.min': rootPath + '/src/FilesUploader.ts'
     }
   } else {
     entry = {
-      'fileUploader': rootPath + '/src/FilesUploader.ts'
+      'filesUploader': rootPath + '/src/FilesUploader.ts'
     }
   }
-  if (!functions.checkWatch(argv) && prod) {
+  if (argv.build && prod) {
     plugins.unshift(
       new CleanWebpackPlugin()
     );
