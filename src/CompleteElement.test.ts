@@ -70,12 +70,12 @@ describe('tests completeElement', () => {
     test('success remove request', async () => {
       expect.assertions(1);
       mock.delete('/test', {
-        status: 200,
+        status: 204,
         body: JSON.stringify({ status: 'success' })
       });
       const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
       const instance = mountComponent(props);
-      const data = await instance.delete('/test', {}, {});
+      const data = await instance.delete('/test');
       expect(data.status).toBe('success');
     });
 
@@ -88,7 +88,7 @@ describe('tests completeElement', () => {
       const props = mockPropsCompleteElement(COMPONENT_CHILD_ALIAS);
       const instance = mountComponent(props);
       try {
-        await instance.delete('/test', {}, {});
+        await instance.delete('/test');
       } catch (e) {
         expect(e.reasons[0]).toBe(FilesUploaderErrorType.Remove);
         expect(e.reasons.length).toBe(1);

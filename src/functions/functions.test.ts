@@ -104,17 +104,20 @@ test('addHeaders', () => {
 });
 
 test('transformObjectToSendData', () => {
-  const result1 = transformObjectToSendData('json', {}, {});
-  expect(typeof result1).toBe('string');
+  const result1 = transformObjectToSendData({
+    str: 'test1'
+  });
+  expect(result1).toBe(result1);
   const result2 = transformObjectToSendData(
-    'multipartForm',
     {
-      file: mockDefaultFile()
+      str: 'test2'
     },
-    {}
+    data => {
+      data.test = mockDefaultFile();
+      return data;
+    }
   );
-  expect(result2).toBeInstanceOf(FormData);
-  expect(result2.get('file')).toBeInstanceOf(File);
+  expect(result2.test).toBeInstanceOf(File);
 });
 
 test('getQueryElement', () => {

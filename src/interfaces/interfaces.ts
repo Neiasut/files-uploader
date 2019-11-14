@@ -18,9 +18,22 @@ export interface FilesUploaderLabels {
   completeList?: string;
 }
 
+export interface FilesUploaderSendData {
+  [key: string]: string | File;
+}
+
+interface FilesUploaderActionInfo {
+  url?: string;
+  headers?: { [key: string]: string };
+  onData?: (data: FilesUploaderSendData) => FilesUploaderSendData;
+}
+
+interface FilesUploaderActions {
+  upload?: FilesUploaderActionInfo;
+  remove?: FilesUploaderActionInfo;
+}
+
 export interface FilesUploaderSettings {
-  actionLoad?: string;
-  actionRemove?: string;
   maxSize?: number;
   maxFiles?: number;
   acceptTypes?: string[];
@@ -32,10 +45,21 @@ export interface FilesUploaderSettings {
   statusTexts?: FilesUploaderStatusTexts;
   errorTexts?: FilesUploaderErrorTexts;
   imageView?: boolean;
-  headersLoad?: { [key: string]: string };
-  headersRemove?: { [key: string]: string };
-  externalDataLoad?: { [key: string]: string };
-  externalDataRemove?: { [key: string]: string };
+  server?: FilesUploaderActions;
+}
+
+export interface FilesUploaderConfiguration extends FilesUploaderSettings {
+  maxSize: number;
+  maxFiles: number;
+  acceptTypes: string[];
+  autoUpload: boolean;
+  factoryUploadingComponentAlias: string;
+  factoryCompleteComponentAlias: string;
+  labels: FilesUploaderLabels;
+  statusTexts: FilesUploaderStatusTexts;
+  errorTexts: FilesUploaderErrorTexts;
+  imageView: boolean;
+  server: FilesUploaderActions;
 }
 
 export type FilesUploaderStatusTexts = Record<FilesUploaderStatus, string>;
@@ -97,8 +121,6 @@ interface ComponentProtectedFields {
 export interface Component<T> extends ComponentProtectedFields {
   props: T;
   render(): HTMLElement;
-  /*setStatus(status: FilesUploaderStatus, textStatus?: string): void;
-  setError(errors: FilesUploaderErrorType[], errorTexts?: FilesUploaderErrorInfo[]): void;*/
   subComponents?(): SubComponentInfo[];
   componentWillUnmount?(): void;
   componentDidMount?(): void;
@@ -125,8 +147,8 @@ export interface UploadingWrapper extends Component<UploadingWrapperProps>, Queu
   changePercent(percent: number): void;
   upload(
     path: string,
-    headers: { [key: string]: string },
-    externalData: { [key: string]: string }
+    headers?: { [key: string]: string },
+    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
   ): Promise<FilesUploaderFileData>;
   abort(): void;
   getChildren(): UploadingComponent;
@@ -147,7 +169,11 @@ export interface CompleteWrapper extends Component<CompleteWrapperProps>, QueueE
   setStatus(status: FilesUploaderAvailableStatusesComplete): void;
   setError(errors: FilesUploaderErrorType[]): void;
   getChildren(): CompleteComponent;
-  delete(pathRemove: string, headers: { [key: string]: string }, externalData: { [key: string]: string }): Promise<any>;
+  delete(
+    pathRemove: string,
+    headers?: { [key: string]: string },
+    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
+  ): Promise<any>;
 }
 
 export interface UploadingComponentProps {

@@ -4,17 +4,25 @@ import './addThemes';
 const instance = new FilesUploader(
   '#example1',
   {
-    headersLoad: {
-      'X-SOME-HEADER': '234'
-    },
-    headersRemove: {
-      'X-SOME-HEADER': '234'
-    },
-    externalDataLoad: {
-      info: 'someInfo'
-    },
-    externalDataRemove: {
-      info: 'someInfoForRemove'
+    server: {
+      upload: {
+        headers: {
+          'X-SOME-HEADER': '234'
+        },
+        onData: data => {
+          data.info = 'someInfo';
+          return data;
+        }
+      },
+      remove: {
+        headers: {
+          'X-SOME-HEADER': '234'
+        },
+        onData: data => {
+          data.info = 'someInfoForRemove';
+          return data;
+        }
+      }
     },
     imageView: true
   },
@@ -47,4 +55,5 @@ const instance2 = new FilesUploader(
 
 console.log(instance2);
 
-new FilesUploader('#errorField', {}, ['errorUpload']);
+const instance3 = new FilesUploader('#errorField', {}, ['errorUpload']);
+console.log(instance3);

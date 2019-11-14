@@ -1,4 +1,9 @@
-import { FilesUploaderErrorInfo, FilesUploaderErrorTexts, FilesUploaderFileInfo } from '../interfaces/interfaces';
+import {
+  FilesUploaderErrorInfo,
+  FilesUploaderErrorTexts,
+  FilesUploaderFileInfo,
+  FilesUploaderSendData
+} from '../interfaces/interfaces';
 import { FilesUploaderErrorType } from '../enums/enums';
 
 export const mergeDeepConfig = (...objects) => {
@@ -80,29 +85,22 @@ export const generateRandomString = (length: number = 8): string => {
   return t;
 };
 
-export const addHeaders = (xhr: XMLHttpRequest, headers: { [key: string]: string }) => {
-  for (const [headerName, headerValue] of Object.entries(headers)) {
-    xhr.setRequestHeader(headerName, headerValue);
+export const addHeaders = (xhr: XMLHttpRequest, headers?: { [key: string]: string }) => {
+  if (typeof headers === 'object' && headers !== null) {
+    for (const [headerName, headerValue] of Object.entries(headers)) {
+      xhr.setRequestHeader(headerName, headerValue);
+    }
   }
 };
 
-export const transformObjectToSendData: {
-  (type: 'json', initData: { [key: string]: string }, externalData: { [key: string]: string }): string;
-  (
-    type: 'multipartForm',
-    initData: { [key: string]: string | File },
-    externalData: { [key: string]: string }
-  ): FormData;
-} = (type, initData, externalData): any => {
-  const object = Object.assign({}, initData, externalData);
-  if (type === 'json') {
-    return JSON.stringify(object);
+export const transformObjectToSendData = (
+  initData: FilesUploaderSendData,
+  onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
+): FilesUploaderSendData => {
+  if (typeof onData === 'function') {
+    return onData(initData);
   }
-  const form = new FormData();
-  for (const [key, value] of Object.entries<string | File>(object)) {
-    form.append(key, value);
-  }
-  return form;
+  return initData;
 };
 
 export const getFilesUploaderFileInfoFromInstanceFile = (file: File): FilesUploaderFileInfo => ({
@@ -163,4 +161,12 @@ export const getElementImage = (
       return createImage(pathImage);
     }
   }
+};
+
+export const transformSendDataToFormData = (data: FilesUploaderSendData): FormData => {
+  const form = new FormData();
+  for (const [name, value] of Object.entries(data)) {
+    form.append(name, value);
+  }
+  return form;
 };

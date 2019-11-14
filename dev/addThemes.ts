@@ -5,8 +5,14 @@ FilesUploader.themes.add('testSettings', {
     acceptTypes: ['exe', 'jpg'],
     maxSize: 6 * 1204 * 1024,
     autoUpload: false,
-    actionLoad: 'http://formstone/files_uploader_upload.php',
-    actionRemove: 'http://formstone/files_uploader_remove.php'
+    server: {
+      upload: {
+        url: 'http://files-uploader-back/upload.php'
+      },
+      remove: {
+        url: 'http://files-uploader-back/remove.php'
+      }
+    }
   }
 });
 
@@ -33,7 +39,13 @@ FilesUploader.themes.add('errorUpload', {
     acceptTypes: ['exe', 'jpg'],
     maxSize: 6 * 1204 * 1024,
     autoUpload: true,
-    actionLoad: 'http://formstone/files_uploader_upload_error.php',
-    actionRemove: 'http://formstone/files_uploader_remove.php'
+    server: {
+      upload: {
+        url: 'http://files-uploader-back/upload_error.php'
+      },
+      remove: {
+        url: 'http://files-uploader-back/remove.php'
+      }
+    }
   }
 });

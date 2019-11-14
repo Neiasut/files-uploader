@@ -5,6 +5,7 @@ import {
   CompleteWrapperProps,
   ComponentFactory,
   FilesUploaderAvailableStatusesComplete,
+  FilesUploaderSendData,
   SubComponentInfo
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
@@ -64,8 +65,8 @@ export class CompleteElement implements CompleteWrapper {
 
   delete(
     pathRemove: string,
-    headers: { [key: string]: string },
-    externalData: { [key: string]: string }
+    headers?: { [key: string]: string },
+    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const path = this.props.data.path;
@@ -74,9 +75,9 @@ export class CompleteElement implements CompleteWrapper {
       xhr.open('DELETE', pathRemove, true);
       xhr.responseType = 'json';
       addHeaders(xhr, headers);
-      const info = transformObjectToSendData('json', { path }, externalData);
+      const info = transformObjectToSendData({ path }, onData);
       xhr.onload = () => {
-        if (xhr.status !== 200) {
+        if (xhr.status !== 204) {
           this.setError([FilesUploaderErrorType.Remove]);
           reject(new FilesUploaderErrorNetwork('Server error', [FilesUploaderErrorType.Remove], xhr));
         } else {
@@ -87,7 +88,7 @@ export class CompleteElement implements CompleteWrapper {
         this.setError([FilesUploaderErrorType.Network]);
         reject(new FilesUploaderErrorNetwork('NetworkError', [FilesUploaderErrorType.Network], xhr));
       };
-      xhr.send(info);
+      xhr.send(JSON.stringify(info));
     });
   }
 

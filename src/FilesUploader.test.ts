@@ -74,7 +74,11 @@ describe('FilesUploader test', () => {
       const spyUploadFile = jest.spyOn(FilesUploader.prototype as any, 'uploadFile');
       const instance = new FilesUploader('#test', {
         autoUpload: true,
-        actionLoad: '/test',
+        server: {
+          upload: {
+            url: '/test'
+          }
+        },
         acceptTypes: ['txt']
       });
       const fileExample = mockDefaultFile();
@@ -92,7 +96,11 @@ describe('FilesUploader test', () => {
       const input = mockDefaultInput();
       mockServerRemoveSuccess();
       const instance = new FilesUploader(input, {
-        actionRemove: '/delete'
+        server: {
+          remove: {
+            url: '/delete'
+          }
+        }
       });
       const fileExample = mockFilesUploaderFileData();
       instance.addFile(fileExample);

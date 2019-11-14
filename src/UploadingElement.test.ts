@@ -102,8 +102,9 @@ describe('test UploadingElement', () => {
         {
           'X-TOTAL-COUNT': '1'
         },
-        {
-          some_field: '2'
+        data => {
+          data.some_field = '2';
+          return data;
         }
       );
       expect(dataResponse.name).toBe(props.file.name);
@@ -117,7 +118,7 @@ describe('test UploadingElement', () => {
       const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
       const instance = mountComponent(props);
       try {
-        await instance.upload('/test', {}, {});
+        await instance.upload('/test');
       } catch (e) {
         expect(Array.isArray(e.reasons)).toBeTruthy();
         expect(e.reasons.length).toBe(1);
@@ -136,7 +137,7 @@ describe('test UploadingElement', () => {
       const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
       const instance = mountComponent(props);
       try {
-        instance.upload('/test', {}, {});
+        instance.upload('/test');
         instance.abort();
       } catch (e) {
         expect(instance.xhr.status).toBe(0);

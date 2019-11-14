@@ -2,6 +2,7 @@ import {
   ComponentFactory,
   FilesUploaderAvailableStatusesUploading,
   FilesUploaderFileData,
+  FilesUploaderSendData,
   SubComponentInfo,
   UploadingComponent,
   UploadingComponentProps,
@@ -14,7 +15,8 @@ import {
   addHeaders,
   calcPercentage,
   getFilesUploaderErrorInfo,
-  transformObjectToSendData
+  transformObjectToSendData,
+  transformSendDataToFormData
 } from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
 import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
@@ -80,7 +82,11 @@ export class UploadingElement implements UploadingWrapper {
     this.getChildren().onChangePercent(percent);
   }
 
-  async upload(path: string, headers: { [key: string]: string }, externalData: { [key: string]: string }) {
+  async upload(
+    path: string,
+    headers?: { [key: string]: string },
+    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
+  ) {
     return new Promise<FilesUploaderFileData>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       this.xhr = xhr;
@@ -109,13 +115,13 @@ export class UploadingElement implements UploadingWrapper {
         false
       );
       const sendData = transformObjectToSendData(
-        'multipartForm',
         {
           file: this.props.file
         },
-        externalData
+        onData
       );
-      xhr.send(sendData);
+      const form = transformSendDataToFormData(sendData);
+      xhr.send(form);
     });
   }
 

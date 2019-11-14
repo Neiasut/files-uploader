@@ -13,6 +13,7 @@ import {
   CompleteWrapperProps,
   FilesUploaderAddFileEvent,
   FilesUploaderAddFileToQueueEvent,
+  FilesUploaderConfiguration,
   FilesUploaderFileData,
   FilesUploaderListElements,
   FilesUploaderSettings,
@@ -49,7 +50,7 @@ ComponentPerformer.addFactory(
 export default class FilesUploader {
   elements: FilesUploaderListElements;
   settings: FilesUploaderSettings;
-  configuration: FilesUploaderSettings;
+  configuration: FilesUploaderConfiguration;
   private queue: Queue<UploadingWrapper> = new Queue();
   files: Queue<CompleteWrapper> = new Queue();
   private counterLoadFiles = 0;
@@ -78,8 +79,14 @@ export default class FilesUploader {
   static themes = new Themes();
   static get defaultSettings(): FilesUploaderSettings {
     return {
-      actionLoad: '/',
-      actionRemove: '/',
+      server: {
+        upload: {
+          url: '/'
+        },
+        remove: {
+          url: '/'
+        }
+      },
       acceptTypes: [],
       labels: {
         loader: 'Drag file here or select on device',
@@ -108,11 +115,7 @@ export default class FilesUploader {
       autoUpload: false,
       factoryUploadingComponentAlias: FilesUploaderDefaultComponentAliases.DefaultUploadingComponent,
       factoryCompleteComponentAlias: FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
-      imageView: false,
-      headersLoad: {},
-      headersRemove: {},
-      externalDataLoad: {},
-      externalDataRemove: {}
+      imageView: false
     };
   }
 
@@ -241,9 +244,11 @@ export default class FilesUploader {
   }
 
   private uploadFile(element: UploadingWrapper, file?: File) {
-    const { actionLoad, headersLoad, externalDataLoad } = this.configuration;
+    const {
+      server: { upload }
+    } = this.configuration;
     if (!element.error) {
-      element.upload(actionLoad, headersLoad, externalDataLoad).then(dataResponse => {
+      element.upload(upload.url, upload.headers, upload.onData).then(dataResponse => {
         this.removeQueueFile(element);
         this.addFile(dataResponse, file);
       });
@@ -282,14 +287,16 @@ export default class FilesUploader {
   }
 
   async removeFile(path: string): Promise<any> {
-    const { actionRemove, headersRemove, externalDataRemove } = this.configuration;
+    const {
+      server: { remove }
+    } = this.configuration;
     const component = this.files.getByFn(comp => {
       return comp.props.data.path === path;
     });
     if (typeof component === 'undefined') {
       throw new FilesUploaderError(`Can't element with path = "${path}"`, [FilesUploaderErrorType.Data]);
     }
-    const body = await component.delete(actionRemove, headersRemove, externalDataRemove);
+    const body = await component.delete(remove.url, remove.headers, remove.onData);
     ComponentPerformer.unmountComponent(component);
     this.files.remove(component.id);
     return body;
