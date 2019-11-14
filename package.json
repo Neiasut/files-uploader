@@ -1,7 +1,7 @@
 {
   "name": "files-uploader",
   "version": "0.0.1",
-  "main": "src/FilesUploader.ts",
+  "main": "dist/filesUploader.js",
   "repository": "https://github.com/Neiasut/files-uploader",
   "author": "neiasut <kerlaeeda@gmail.com>",
   "license": "MIT",
