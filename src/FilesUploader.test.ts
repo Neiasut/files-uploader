@@ -2,8 +2,8 @@ import FilesUploader from './FilesUploader';
 import { mockDefaultFile, mockDefaultInput, mockFilesUploaderFileData } from './__mock__/structures';
 // @ts-ignore
 import mock from 'xhr-mock';
-import {mockServerRemoveSuccess, mockServerUploadSuccess} from './__mock__/servers';
-import {FilesUploaderErrorType} from './enums/enums';
+import { mockServerRemoveSuccess, mockServerUploadSuccess } from './__mock__/servers';
+import { FilesUploaderErrorType } from './enums/enums';
 
 describe('FilesUploader test', () => {
   afterEach(() => {

@@ -11,11 +11,12 @@
     "test:coverage": "jest --coverage",
     "build-dev": "webpack --config ./config/webpack/webpack.config.js --mode development --build",
     "build-prod": "webpack --config ./config/webpack/webpack.config.js --mode production --build",
-    "pack-all": "npm run build-prod && npm run build-dev"
+    "pack-all": "npm run build-prod && npm run build-dev",
+    "lint": "tslint -p ./ --fix"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm test"
+      "pre-commit": "npm run lint & npm run test"
     }
   },
   "devDependencies": {

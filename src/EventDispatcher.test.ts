@@ -23,4 +23,3 @@ test('add multiple', () => {
   expect(a).toBe(7);
   expect(fn).toHaveBeenCalledTimes(2);
 });
-
