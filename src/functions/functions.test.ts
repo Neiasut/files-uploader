@@ -128,7 +128,6 @@ test('getQueryElement', () => {
 });
 
 test('imageFromFile', () => {
-  window.URL.createObjectURL = jest.fn();
   const file = mockDefaultFile();
   const image = imageFromFile(file);
   expect(image).toBeInstanceOf(HTMLImageElement);
@@ -166,7 +165,6 @@ test('checkExtensionInArrAllowed', () => {
 });
 
 test('getElementImage', () => {
-  window.URL.createObjectURL = jest.fn();
   const fileImage = new File([], 'test.jpg', {
     type: 'image/jpg'
   });
