@@ -31,8 +31,7 @@ const instance = new FilesUploader(
     {
       name: 'test.txt',
       size: 400,
-      path: '/test.txt',
-      extension: 'txt'
+      path: '/test.txt'
     }
   ]
 );

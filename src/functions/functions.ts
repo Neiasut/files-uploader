@@ -105,8 +105,7 @@ export const transformObjectToSendData = (
 
 export const getFilesUploaderFileInfoFromInstanceFile = (file: File): FilesUploaderFileInfo => ({
   name: file.name,
-  size: file.size,
-  extension: getFileExtension(file.name)
+  size: file.size
 });
 
 export const getQueryElement = (element: HTMLInputElement | string): HTMLInputElement | false => {

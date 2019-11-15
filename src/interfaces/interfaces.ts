@@ -72,7 +72,6 @@ export interface FilesUploaderErrorInfo {
 export interface FilesUploaderFileInfo {
   readonly name: string;
   readonly size: number;
-  readonly extension: string;
 }
 
 export interface FilesUploaderAddFileToQueueEvent {
@@ -85,7 +84,6 @@ export interface FilesUploaderAddFileEvent {
 
 export interface FilesUploaderFileData extends FilesUploaderFileInfo {
   path: string;
-  externalData?: object;
 }
 
 export type FilesUploaderAvailableStatusesComplete =

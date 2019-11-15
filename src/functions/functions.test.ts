@@ -184,5 +184,4 @@ test('getFilesUploaderFileInfoFromInstanceFile', () => {
   const data = getFilesUploaderFileInfoFromInstanceFile(file);
   expect(data.name).toBe('test.jpg');
   expect(data.size).toBe(file.size);
-  expect(data.extension).toBe('jpg');
 });

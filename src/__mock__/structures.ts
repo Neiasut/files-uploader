@@ -55,8 +55,7 @@ export const mockDefaultFile = (): File => {
 export const mockFilesUploaderFileData = (): FilesUploaderFileData => ({
   name: 'foo.txt',
   path: '/somePath/foo.txt',
-  size: 4,
-  extension: 'txt'
+  size: 4
 });
 
 export const mockInstanceFilesUploader = (

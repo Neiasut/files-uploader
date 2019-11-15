@@ -1,6 +1,7 @@
 import './styles/FilesUploader.scss';
 import {
   getElementImage,
+  getFileExtension,
   getQueryElement,
   mergeDeepConfig,
   setInput,
@@ -262,7 +263,13 @@ export default class FilesUploader {
 
   addFile(data: FilesUploaderFileData, file?: File) {
     const { factoryCompleteComponentAlias, imageView, statusTexts, errorTexts } = this.configuration;
-    const imageElement = getElementImage(imageView, FilesUploader.imageExtensions, data.extension, file, data.path);
+    const imageElement = getElementImage(
+      imageView,
+      FilesUploader.imageExtensions,
+      getFileExtension(data.name),
+      file,
+      data.path
+    );
     const props: CompleteWrapperProps = {
       componentChildFactoryAlias: factoryCompleteComponentAlias,
       statusTexts,
