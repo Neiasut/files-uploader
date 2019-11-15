@@ -294,7 +294,7 @@ export default class FilesUploader {
       return comp.props.data.path === path;
     });
     if (typeof component === 'undefined') {
-      throw new FilesUploaderError(`Can't element with path = "${path}"`, [FilesUploaderErrorType.Data]);
+      throw new FilesUploaderError(`Can't find element with path = "${path}"`, [FilesUploaderErrorType.Data]);
     }
     const body = await component.delete(remove.url, remove.headers, remove.onData);
     ComponentPerformer.unmountComponent(component);

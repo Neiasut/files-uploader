@@ -1,11 +1,15 @@
 import { FilesUploaderStatus } from './enums/enums';
 import EventDispatcher from './EventDispatcher';
 import { QueueElement } from './interfaces/interfaces';
+import { generateRandomString } from './functions/functions';
 
 export default class Queue<T extends QueueElement> {
   private arr: T[] = [];
 
   add(element: T) {
+    if (typeof element.id !== 'string') {
+      element.id = generateRandomString();
+    }
     this.arr.push(element);
     this.fireDidChangeLength();
   }
