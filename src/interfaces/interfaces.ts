@@ -37,7 +37,6 @@ export interface FilesUploaderSettings {
   maxSize?: number;
   maxFiles?: number;
   acceptTypes?: string[];
-  maxParallelUploads?: number;
   autoUpload?: boolean;
   factoryUploadingComponentAlias?: string;
   factoryCompleteComponentAlias?: string;

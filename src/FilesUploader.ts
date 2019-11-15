@@ -111,7 +111,6 @@ export default class FilesUploader {
       },
       maxFiles: 3,
       maxSize: 10 * 1024 * 1024,
-      maxParallelUploads: 3,
       autoUpload: false,
       factoryUploadingComponentAlias: FilesUploaderDefaultComponentAliases.DefaultUploadingComponent,
       factoryCompleteComponentAlias: FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
