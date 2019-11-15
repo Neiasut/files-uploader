@@ -27,7 +27,7 @@ export class DefaultCompleteComponent implements CompleteComponent {
     if (imageElement) {
       const wrapperImage = document.createElement('div');
       wrapperImage.classList.add('FilesUploaderCompleteComponent-ImageWrapper');
-      imageElement.classList.add('FilesUploaderCompleteComponent-ImageWrapper');
+      imageElement.classList.add('FilesUploaderCompleteComponent-Image');
       wrapperImage.appendChild(imageElement);
       root.appendChild(wrapperImage);
     }
