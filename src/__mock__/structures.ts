@@ -86,8 +86,17 @@ export const mockPropsCompleteComponent = (): CompleteComponentProps => ({
 export const mockPropsUploadingElement = (factoryChildAlias: string): UploadingWrapperProps => ({
   file: mockDefaultFile(),
   componentChildFactoryAlias: factoryChildAlias,
-  statusTexts: mockFilesUploaderStatusTexts(),
-  errorTexts: mockFilesUploaderErrorTexts(),
+  getStatusText: jest.fn(() => {
+    return 'status text';
+  }),
+  getErrorTexts: jest.fn(() => {
+    return [
+      {
+        text: 'error text data',
+        type: FilesUploaderErrorType.Data
+      }
+    ];
+  }),
   imageElement: createImage('/test.png'),
   upload: jest.fn(),
   cancel: jest.fn()
@@ -99,6 +108,15 @@ export const mockPropsCompleteElement = (factoryChildAlias: string): CompleteWra
   data: mockFilesUploaderFileData(),
   componentChildFactoryAlias: factoryChildAlias,
   remove: jest.fn(),
-  statusTexts: mockFilesUploaderStatusTexts(),
-  errorTexts: mockFilesUploaderErrorTexts()
+  getStatusText: jest.fn(() => {
+    return 'status text';
+  }),
+  getErrorTexts: jest.fn(() => {
+    return [
+      {
+        text: 'error text data',
+        type: FilesUploaderErrorType.Data
+      }
+    ];
+  })
 });

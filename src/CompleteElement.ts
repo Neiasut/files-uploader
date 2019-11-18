@@ -10,7 +10,7 @@ import {
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import ComponentPerformer from './ComponentPerformer';
-import { addHeaders, getFilesUploaderErrorInfo, transformObjectToSendData } from './functions/functions';
+import { addHeaders, transformObjectToSendData } from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
 import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
 
@@ -35,7 +35,7 @@ export class CompleteElement implements CompleteWrapper {
   setError(errors: FilesUploaderErrorType[]): void {
     this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
-    this.getChildren().setError(errors, getFilesUploaderErrorInfo(errors, this.props.errorTexts));
+    this.getChildren().setError(errors, this.props.getErrorTexts(errors));
   }
 
   setStatus(status: FilesUploaderAvailableStatusesComplete): void {
@@ -44,7 +44,7 @@ export class CompleteElement implements CompleteWrapper {
     if (status !== FilesUploaderStatus.Error) {
       this.errorTypes = [];
     }
-    this.getChildren().setStatus(status, this.props.statusTexts[status]);
+    this.getChildren().setStatus(status, this.props.getStatusText(status));
   }
 
   subComponents(): SubComponentInfo[] {

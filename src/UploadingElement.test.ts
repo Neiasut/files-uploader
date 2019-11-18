@@ -1,5 +1,5 @@
 import { factoryUploadingElement, UploadingElement } from './UploadingElement';
-import { mockDefaultDiv, mockPropsUploadingElement } from './__mock__/structures';
+import { mockDefaultDiv, mockFilesUploaderStatusTexts, mockPropsUploadingElement } from './__mock__/structures';
 // @ts-ignore
 import mock from 'xhr-mock';
 import { DefaultUploadingComponent, factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
@@ -43,30 +43,44 @@ describe('test UploadingElement', () => {
 
   test('setStatus', () => {
     const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
+    const STATUS = FilesUploaderStatus.Uploading;
+    props.getStatusText = jest.fn(() => {
+      return mockFilesUploaderStatusTexts()[STATUS];
+    });
     const spyChildSetStatus = jest.spyOn(DefaultUploadingComponent.prototype as any, 'setStatus');
     const instance = mountComponent(props);
-    const STATUS = FilesUploaderStatus.Uploading;
     instance.setStatus(STATUS);
     expect(instance.status).toBe(STATUS);
     expect(spyChildSetStatus).toHaveBeenCalled();
-    expect(spyChildSetStatus).toHaveBeenCalledWith(STATUS, props.statusTexts[STATUS]);
+    expect(spyChildSetStatus).toHaveBeenCalledWith(STATUS, mockFilesUploaderStatusTexts()[STATUS]);
     spyChildSetStatus.mockRestore();
   });
 
   test('setError', () => {
     const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
+    const ERROR = FilesUploaderErrorType.MoreMaxFiles;
+    props.getErrorTexts = jest.fn(() => {
+      return [
+        {
+          text: 'some error text',
+          type: ERROR
+        }
+      ];
+    });
     const spyChildSetError = jest.spyOn(DefaultUploadingComponent.prototype as any, 'setError');
     const instance = mountComponent(props);
-    const ERRORS = [FilesUploaderErrorType.MoreMaxFiles];
-    instance.setError(ERRORS);
+    instance.setError([ERROR]);
     expect(instance.status).toBe(FilesUploaderStatus.Error);
     expect(spyChildSetError).toHaveBeenCalled();
-    expect(spyChildSetError).toHaveBeenCalledWith(ERRORS, [
-      {
-        text: props.errorTexts[ERRORS[0]],
-        type: ERRORS[0]
-      }
-    ]);
+    expect(spyChildSetError).toHaveBeenCalledWith(
+      [ERROR],
+      [
+        {
+          text: 'some error text',
+          type: ERROR
+        }
+      ]
+    );
     expect(instance.error).toBeTruthy();
     spyChildSetError.mockRestore();
   });
@@ -90,7 +104,6 @@ describe('test UploadingElement', () => {
         const data: FilesUploaderFileData = {
           name: fileRequest.name,
           size: fileRequest.size,
-          extension: 'txt',
           path: '/somePath/' + fileRequest.name
         };
         return response.status(200).body(JSON.stringify(data));

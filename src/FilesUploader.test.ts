@@ -125,13 +125,11 @@ describe('FilesUploader test', () => {
       [
         {
           name: 'test.txt',
-          extension: 'text',
           size: 400,
           path: '/test.txt'
         },
         {
           name: 'test.txt',
-          extension: 'text',
           size: 400,
           path: '/test.txt'
         }

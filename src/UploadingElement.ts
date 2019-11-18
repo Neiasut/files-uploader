@@ -14,7 +14,6 @@ import ComponentPerformer from './ComponentPerformer';
 import {
   addHeaders,
   calcPercentage,
-  getFilesUploaderErrorInfo,
   transformObjectToSendData,
   transformSendDataToFormData
 } from './functions/functions';
@@ -40,7 +39,7 @@ export class UploadingElement implements UploadingWrapper {
   setError(errors: FilesUploaderErrorType[]): void {
     this.errorTypes = errors;
     this.setStatus(FilesUploaderStatus.Error);
-    this.getChildren().setError(errors, getFilesUploaderErrorInfo(errors, this.props.errorTexts));
+    this.getChildren().setError(errors, this.props.getErrorTexts(errors));
   }
 
   setStatus(status: FilesUploaderAvailableStatusesUploading): void {
@@ -49,7 +48,7 @@ export class UploadingElement implements UploadingWrapper {
     if (status !== FilesUploaderStatus.Error) {
       this.errorTypes = [];
     }
-    this.getChildren().setStatus(status, this.props.statusTexts[status]);
+    this.getChildren().setStatus(status, this.props.getStatusText(status));
   }
 
   subComponents(): SubComponentInfo[] {

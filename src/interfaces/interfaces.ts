@@ -125,12 +125,15 @@ export interface Component<T> extends ComponentProtectedFields {
 
 export type ComponentFactory<T, K extends Component<T>> = (props: T) => K;
 
-export interface UploadingWrapperProps {
-  file: File;
+interface WrapperProps {
   componentChildFactoryAlias: string;
-  statusTexts: FilesUploaderStatusTexts;
-  errorTexts: FilesUploaderErrorTexts;
+  getStatusText(status: FilesUploaderStatus): string;
+  getErrorTexts(errors: FilesUploaderErrorType[]): FilesUploaderErrorInfo[];
   imageElement?: HTMLImageElement;
+}
+
+export interface UploadingWrapperProps extends WrapperProps {
+  file: File;
   upload(): void;
   cancel(): void;
 }
@@ -151,13 +154,9 @@ export interface UploadingWrapper extends Component<UploadingWrapperProps>, Queu
   getChildren(): UploadingComponent;
 }
 
-export interface CompleteWrapperProps {
+export interface CompleteWrapperProps extends WrapperProps {
   data: FilesUploaderFileData;
   file?: File;
-  componentChildFactoryAlias: string;
-  statusTexts: FilesUploaderStatusTexts;
-  errorTexts: FilesUploaderErrorTexts;
-  imageElement?: HTMLImageElement;
   remove(): void;
 }
 

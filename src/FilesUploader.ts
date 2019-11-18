@@ -2,6 +2,7 @@ import './styles/FilesUploader.scss';
 import {
   getElementImage,
   getFileExtension,
+  getFilesUploaderErrorInfo,
   getQueryElement,
   mergeDeepConfig,
   setInput,
@@ -15,6 +16,7 @@ import {
   FilesUploaderAddFileEvent,
   FilesUploaderAddFileToQueueEvent,
   FilesUploaderConfiguration,
+  FilesUploaderErrorInfo,
   FilesUploaderFileData,
   FilesUploaderListElements,
   FilesUploaderSettings,
@@ -197,16 +199,14 @@ export default class FilesUploader {
       maxFiles,
       factoryUploadingComponentAlias,
       autoUpload,
-      statusTexts,
-      errorTexts,
       imageView
     } = this.configuration;
     this.counterLoadFiles += 1;
     const imageElement = getElementImage(imageView, null, null, file, null);
     const props: UploadingWrapperProps = {
       file,
-      statusTexts,
-      errorTexts,
+      getStatusText: this.getStatusText,
+      getErrorTexts: this.getErrorTexts,
       componentChildFactoryAlias: factoryUploadingComponentAlias,
       imageElement,
       upload: () => {
@@ -262,7 +262,7 @@ export default class FilesUploader {
   }
 
   addFile(data: FilesUploaderFileData, file?: File) {
-    const { factoryCompleteComponentAlias, imageView, statusTexts, errorTexts } = this.configuration;
+    const { factoryCompleteComponentAlias, imageView } = this.configuration;
     const imageElement = getElementImage(
       imageView,
       FilesUploader.imageExtensions,
@@ -272,8 +272,8 @@ export default class FilesUploader {
     );
     const props: CompleteWrapperProps = {
       componentChildFactoryAlias: factoryCompleteComponentAlias,
-      statusTexts,
-      errorTexts,
+      getStatusText: this.getStatusText,
+      getErrorTexts: this.getErrorTexts,
       file,
       imageElement,
       data,
@@ -331,4 +331,12 @@ export default class FilesUploader {
   }
 
   static imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+  private getStatusText = (status: FilesUploaderStatus): string => {
+    return this.configuration.statusTexts[status];
+  };
+
+  private getErrorTexts = (errors: FilesUploaderErrorType[]): FilesUploaderErrorInfo[] => {
+    return getFilesUploaderErrorInfo(errors, this.configuration.errorTexts);
+  };
 }
