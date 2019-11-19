@@ -193,14 +193,7 @@ export default class FilesUploader {
   }
 
   private addFileToQueue(file: File) {
-    const {
-      maxSize,
-      acceptTypes,
-      maxFiles,
-      factoryUploadingComponentAlias,
-      autoUpload,
-      imageView
-    } = this.configuration;
+    const { maxSize, acceptTypes, factoryUploadingComponentAlias, autoUpload, imageView } = this.configuration;
     this.counterLoadFiles += 1;
     const imageElement = getElementImage(imageView, null, null, file, null);
     const props: UploadingWrapperProps = {
@@ -229,9 +222,6 @@ export default class FilesUploader {
     if (!validateFileExtension(file, acceptTypes)) {
       errorTypes.push(FilesUploaderErrorType.Type);
     }
-    if (this.files.length + this.queue.countUploadingFiles >= maxFiles) {
-      errorTypes.push(FilesUploaderErrorType.MoreMaxFiles);
-    }
     if (errorTypes.length > 0) {
       element.setError(errorTypes);
     }
@@ -245,8 +235,13 @@ export default class FilesUploader {
 
   private uploadFile(element: UploadingWrapper, file?: File) {
     const {
-      server: { upload }
+      server: { upload },
+      maxFiles
     } = this.configuration;
+    if (this.files.length + this.queue.countUploadingFiles >= maxFiles) {
+      element.setError([FilesUploaderErrorType.MoreMaxFiles]);
+      return;
+    }
     if (!element.error) {
       element.upload(upload.url, upload.headers, upload.onData).then(dataResponse => {
         this.removeQueueFile(element);
