@@ -1,8 +1,6 @@
 import {
   ComponentFactory,
   FilesUploaderAvailableStatusesUploading,
-  FilesUploaderFileData,
-  FilesUploaderSendData,
   SubComponentInfo,
   UploadingComponent,
   UploadingComponentProps,
@@ -11,14 +9,7 @@ import {
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import ComponentPerformer from './ComponentPerformer';
-import {
-  addHeaders,
-  calcPercentage,
-  transformObjectToSendData,
-  transformSendDataToFormData
-} from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
-import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
 
 export class UploadingElement implements UploadingWrapper {
   id: string;
@@ -26,7 +17,7 @@ export class UploadingElement implements UploadingWrapper {
   status: FilesUploaderAvailableStatusesUploading;
   errorTypes: FilesUploaderErrorType[] = [];
   percent = 0;
-  xhr: XMLHttpRequest | null = null;
+  uploadingRequest;
 
   constructor(props: UploadingWrapperProps) {
     this.props = props;
@@ -79,55 +70,6 @@ export class UploadingElement implements UploadingWrapper {
   changePercent(percent: number) {
     this.percent = percent;
     this.getChildren().onChangePercent(percent);
-  }
-
-  async upload(
-    path: string,
-    headers?: { [key: string]: string },
-    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
-  ) {
-    return new Promise<FilesUploaderFileData>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      this.xhr = xhr;
-      xhr.open('POST', path, true);
-      xhr.responseType = 'json';
-      this.setStatus(FilesUploaderStatus.Uploading);
-      addHeaders(xhr, headers);
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          resolve(xhr.response);
-        } else {
-          this.setError([FilesUploaderErrorType.Upload]);
-          reject(new FilesUploaderErrorNetwork('Error upload', [FilesUploaderErrorType.Upload], xhr));
-        }
-      };
-      xhr.onerror = () => {
-        this.setError([FilesUploaderErrorType.Network]);
-        reject(new FilesUploaderErrorNetwork('Error upload', [FilesUploaderErrorType.Network], xhr));
-      };
-      xhr.upload.addEventListener(
-        'progress',
-        e => {
-          const percent = calcPercentage(e.loaded, e.total);
-          this.changePercent(percent);
-        },
-        false
-      );
-      const sendData = transformObjectToSendData(
-        {
-          file: this.props.file
-        },
-        onData
-      );
-      const form = transformSendDataToFormData(sendData);
-      xhr.send(form);
-    });
-  }
-
-  abort() {
-    if (this.xhr instanceof XMLHttpRequest) {
-      this.xhr.abort();
-    }
   }
 
   getChildren(): UploadingComponent {

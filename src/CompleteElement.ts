@@ -5,20 +5,18 @@ import {
   CompleteWrapperProps,
   ComponentFactory,
   FilesUploaderAvailableStatusesComplete,
-  FilesUploaderSendData,
   SubComponentInfo
 } from './interfaces/interfaces';
 import { FilesUploaderErrorType, FilesUploaderStatus, FilesUploaderTypeFile } from './enums/enums';
 import ComponentPerformer from './ComponentPerformer';
-import { addHeaders, transformObjectToSendData } from './functions/functions';
 import { createWrapperElement } from './functions/constructors';
-import FilesUploaderErrorNetwork from './errors/FilesUploaderErrorNetwork';
 
 export class CompleteElement implements CompleteWrapper {
   id: string;
   props: CompleteWrapperProps;
   status: FilesUploaderAvailableStatusesComplete;
   errorTypes: FilesUploaderErrorType[] = [];
+  removeRequest;
 
   constructor(props) {
     this.props = props;
@@ -61,35 +59,6 @@ export class CompleteElement implements CompleteWrapper {
         root: ComponentPerformer.getRenderRoot(this)
       }
     ];
-  }
-
-  delete(
-    pathRemove: string,
-    headers?: { [key: string]: string },
-    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
-  ): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const path = this.props.data.path;
-      this.setStatus(FilesUploaderStatus.Removing);
-      const xhr = new XMLHttpRequest();
-      xhr.open('DELETE', pathRemove, true);
-      xhr.responseType = 'json';
-      addHeaders(xhr, headers);
-      const info = transformObjectToSendData({ path }, onData);
-      xhr.onload = () => {
-        if (xhr.status !== 204) {
-          this.setError([FilesUploaderErrorType.Remove]);
-          reject(new FilesUploaderErrorNetwork('Server error', [FilesUploaderErrorType.Remove], xhr));
-        } else {
-          resolve(xhr.response);
-        }
-      };
-      xhr.onerror = () => {
-        this.setError([FilesUploaderErrorType.Network]);
-        reject(new FilesUploaderErrorNetwork('NetworkError', [FilesUploaderErrorType.Network], xhr));
-      };
-      xhr.send(JSON.stringify(info));
-    });
   }
 
   getChildren(): CompleteComponent {

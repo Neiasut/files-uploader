@@ -1,5 +1,6 @@
 import './styles/FilesUploader.scss';
 import {
+  calcPercentage,
   getElementImage,
   getFileExtension,
   getFilesUploaderErrorInfo,
@@ -40,6 +41,7 @@ import { factoryCompleteElement } from './CompleteElement';
 import { factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
 import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
 import FilesUploaderError from './errors/FileUploaderError';
+import { Server } from './Server';
 
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.UploadingElement, factoryUploadingElement);
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.CompleteElement, factoryCompleteElement);
@@ -166,7 +168,10 @@ export default class FilesUploader {
 
   private addListeners() {
     this.elements.input.addEventListener('change', () => {
-      this.onAddFiles();
+      const { input } = this.elements;
+      const files = Array.from(input.files);
+      this.addFilesToQueue(files);
+      input.value = '';
     });
     this.queue.onDidChangeLength(lengthQueue => {
       const { wrapper } = this.elements;
@@ -186,16 +191,17 @@ export default class FilesUploader {
     });
   }
 
-  private onAddFiles() {
-    const { input } = this.elements;
-    Array.from(input.files).forEach(file => {
-      this.addFileToQueue(file);
+  private addFilesToQueue(files: File[]) {
+    files.forEach(file => {
+      const element = this.addFileToQueue(file);
+      if (this.configuration.autoUpload && !element.error) {
+        this.upload(element);
+      }
     });
-    input.value = '';
   }
 
-  private addFileToQueue(file: File) {
-    const { maxSize, acceptTypes, factoryUploadingComponentAlias, autoUpload, imageView } = this.configuration;
+  private addFileToQueue(file: File): UploadingWrapper {
+    const { maxSize, acceptTypes, factoryUploadingComponentAlias, imageView } = this.configuration;
     this.counterLoadFiles += 1;
     const imageElement = getElementImage(imageView, null, null, file, null);
     const props: UploadingWrapperProps = {
@@ -205,7 +211,7 @@ export default class FilesUploader {
       componentChildFactoryAlias: factoryUploadingComponentAlias,
       imageElement,
       upload: () => {
-        this.uploadFile(element, file);
+        this.upload(element);
       },
       cancel: () => {
         this.removeQueueFile(element);
@@ -231,39 +237,55 @@ export default class FilesUploader {
       instance: this,
       file
     });
-    if (autoUpload && !element.error) {
-      this.uploadFile(element, file);
-    }
+    return element;
   }
 
-  private uploadFile(element: UploadingWrapper, file: File) {
+  private async upload(element: UploadingWrapper): Promise<FilesUploaderFileData> {
     const {
       server: { upload },
       maxFiles
     } = this.configuration;
+    const file = element.props.file;
     if (this.files.length + this.queue.countUploadingFiles >= maxFiles) {
       element.setError([FilesUploaderErrorType.MoreMaxFiles]);
       return;
     }
-    if (!element.error) {
-      element.upload(upload.url, upload.headers, upload.onData).then(dataResponse => {
-        this.removeQueueFile(element);
-        this.addFile(dataResponse, file);
-        this.fireDidUploadFile({
-          instance: this,
-          file
-        });
+    element.setStatus(FilesUploaderStatus.Uploading);
+    const request = Server.upload(upload.url, file, upload.headers, upload.onData);
+    request.xhr.upload.addEventListener(
+      'progress',
+      e => {
+        const percent = calcPercentage(e.loaded, e.total);
+        element.changePercent(percent);
+      },
+      false
+    );
+    element.uploadingRequest = request;
+    try {
+      const dataResponse = await request.send();
+      this.removeQueueFile(element);
+      this.addFile(dataResponse, file);
+      this.fireDidUploadFile({
+        instance: this,
+        file
       });
+      return dataResponse;
+    } catch (e) {
+      if (e instanceof FilesUploaderError) {
+        element.setError(e.reasons);
+      }
     }
   }
 
   private removeQueueFile(element: UploadingWrapper) {
-    element.abort();
+    if (element.uploadingRequest) {
+      element.uploadingRequest.xhr.abort();
+    }
     this.queue.remove(element.id);
     ComponentPerformer.unmountComponent(element);
   }
 
-  addFile(data: FilesUploaderFileData, file?: File) {
+  private addFile(data: FilesUploaderFileData, file?: File) {
     const { factoryCompleteComponentAlias, imageView } = this.configuration;
     const imageElement = getElementImage(
       imageView,
@@ -305,14 +327,23 @@ export default class FilesUploader {
     if (typeof component === 'undefined') {
       throw new FilesUploaderError(`Can't find element with path = "${path}"`, [FilesUploaderErrorType.Data]);
     }
-    const body = await component.delete(remove.url, remove.headers, remove.onData);
-    ComponentPerformer.unmountComponent(component);
-    this.files.remove(component.id);
-    this.fireDidRemoveFile({
-      instance: this,
-      data: component.props.data
-    });
-    return body;
+    const request = Server.remove(remove.url, path, remove.headers, remove.onData);
+    component.removeRequest = request;
+    component.setStatus(FilesUploaderStatus.Removing);
+    try {
+      const body = await request.send();
+      ComponentPerformer.unmountComponent(component);
+      this.files.remove(component.id);
+      this.fireDidRemoveFile({
+        instance: this,
+        data: component.props.data
+      });
+      return body;
+    } catch (e) {
+      if (e instanceof FilesUploaderError) {
+        component.setError(e.reasons);
+      }
+    }
   }
 
   private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();

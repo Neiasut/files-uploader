@@ -1,5 +1,6 @@
 import { FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
 import FilesUploader from '../FilesUploader';
+import { ServerRequest } from '../Server';
 
 export interface FilesUploaderListElements {
   input: HTMLInputElement;
@@ -153,16 +154,11 @@ export interface UploadingWrapperProps extends WrapperProps {
 export interface UploadingWrapper extends Component<UploadingWrapperProps>, QueueElement {
   readonly error: boolean;
   percent: number;
+  uploadingRequest?: ServerRequest<FilesUploaderFileData>;
   status: FilesUploaderAvailableStatusesUploading;
   setStatus(status: FilesUploaderAvailableStatusesUploading): void;
   setError(errors: FilesUploaderErrorType[]): void;
   changePercent(percent: number): void;
-  upload(
-    path: string,
-    headers?: { [key: string]: string },
-    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
-  ): Promise<FilesUploaderFileData>;
-  abort(): void;
   getChildren(): UploadingComponent;
 }
 
@@ -177,11 +173,7 @@ export interface CompleteWrapper extends Component<CompleteWrapperProps>, QueueE
   setStatus(status: FilesUploaderAvailableStatusesComplete): void;
   setError(errors: FilesUploaderErrorType[]): void;
   getChildren(): CompleteComponent;
-  delete(
-    pathRemove: string,
-    headers?: { [key: string]: string },
-    onData?: (data: FilesUploaderSendData) => FilesUploaderSendData
-  ): Promise<any>;
+  removeRequest?: ServerRequest<any>;
 }
 
 export interface UploadingComponentProps {

@@ -25,15 +25,30 @@ describe('FilesUploader test', () => {
 
   test('checkEventChangeTriggered', () => {
     const input = mockDefaultInput();
-    const spy = jest.spyOn(FilesUploader.prototype as any, 'onAddFiles');
+    const spyOnAddFiles = jest.spyOn(FilesUploader.prototype as any, 'addFilesToQueue');
     const instance = new FilesUploader('#test');
     const event = document.createEvent('UIEvents');
     event.initEvent('change', true, true);
     const cb = jest.fn();
     instance.onDidAddFileToQueue(cb);
     input.dispatchEvent(event);
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    expect(spyOnAddFiles).toHaveBeenCalled();
+    expect(input.value).toBe('');
+    spyOnAddFiles.mockRestore();
+  });
+
+  test('addFilesToQueue', () => {
+    mockDefaultInput();
+    const instance = new FilesUploader('#test', {
+      autoUpload: true,
+      acceptTypes: ['txt']
+    });
+    const file = mockDefaultFile();
+    const spyUploadFile = jest.spyOn(FilesUploader.prototype as any, 'upload');
+    // @ts-ignore
+    instance.addFilesToQueue([file]);
+    expect(spyUploadFile).toHaveBeenCalled();
+    spyUploadFile.mockRestore();
   });
 
   test('onDidAddFile', () => {
@@ -42,7 +57,7 @@ describe('FilesUploader test', () => {
     const fileExample = mockFilesUploaderFileData();
     const cb = jest.fn();
     instance.onDidAddFile(cb);
-    instance.addFile(fileExample);
+    instance.addFiles([fileExample]);
     expect(cb).toHaveBeenCalledTimes(1);
   });
 
@@ -65,10 +80,10 @@ describe('FilesUploader test', () => {
       mock.teardown();
     });
 
-    test('addFileToQueue with autoUpload', () => {
+    test('addFileToQueue with autoUpload', async () => {
       mockDefaultInput();
       mockServerUploadSuccess();
-      const spyUploadFile = jest.spyOn(FilesUploader.prototype as any, 'uploadFile');
+      const spyUpload = jest.spyOn(FilesUploader.prototype as any, 'upload');
       const instance = new FilesUploader('#test', {
         autoUpload: true,
         server: {
@@ -80,12 +95,18 @@ describe('FilesUploader test', () => {
       });
       const fileExample = mockDefaultFile();
       const onDidAddFile = jest.fn();
+      const onDidUploadFile = jest.fn();
       instance.onDidAddFileToQueue(onDidAddFile);
+      instance.onDidUploadFile(onDidUploadFile);
       // @ts-ignore
-      instance.addFileToQueue(fileExample);
+      const element = instance.addFileToQueue(fileExample);
+      // @ts-ignore
+      await instance.upload(element);
       expect(onDidAddFile).toHaveBeenCalledTimes(1);
-      expect(spyUploadFile).toHaveBeenCalled();
-      spyUploadFile.mockRestore();
+      expect(typeof element).toBe('object');
+      expect(spyUpload).toHaveBeenCalled();
+      expect(onDidUploadFile).toHaveBeenCalled();
+      spyUpload.mockRestore();
     });
 
     test('addFile, removeFile', async () => {
@@ -100,7 +121,7 @@ describe('FilesUploader test', () => {
         }
       });
       const fileExample = mockFilesUploaderFileData();
-      instance.addFile(fileExample);
+      instance.addFiles([fileExample]);
       expect(instance.files.length).toBe(1);
       try {
         await instance.removeFile('error');

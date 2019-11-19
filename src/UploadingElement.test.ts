@@ -1,11 +1,8 @@
 import { factoryUploadingElement, UploadingElement } from './UploadingElement';
 import { mockDefaultDiv, mockFilesUploaderStatusTexts, mockPropsUploadingElement } from './__mock__/structures';
-// @ts-ignore
-import mock from 'xhr-mock';
 import { DefaultUploadingComponent, factoryDefaultUploadingComponent } from './DefaultUploadingComponent';
 import ComponentPerformer from './ComponentPerformer';
 import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
-import { FilesUploaderFileData } from './interfaces/interfaces';
 
 const COMPONENT_ALIAS = 'component';
 const COMPONENT_CHILD_ALIAS = 'child';
@@ -83,78 +80,5 @@ describe('test UploadingElement', () => {
     );
     expect(instance.error).toBeTruthy();
     spyChildSetError.mockRestore();
-  });
-
-  describe('async tests', () => {
-    beforeEach(() => {
-      mock.setup();
-    });
-
-    afterEach(() => {
-      mock.teardown();
-    });
-
-    test('success upload', async () => {
-      expect.assertions(3);
-      mock.post('/test', (request, response) => {
-        const formData: FormData = request.body();
-        const fileRequest = formData.get('file') as File;
-        expect(request.header('X-TOTAL-COUNT')).toBe('1');
-        expect(formData.get('some_field')).toBe('2');
-        const data: FilesUploaderFileData = {
-          name: fileRequest.name,
-          size: fileRequest.size,
-          path: '/somePath/' + fileRequest.name
-        };
-        return response.status(200).body(JSON.stringify(data));
-      });
-      const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
-      const instance = mountComponent(props);
-      const dataResponse = await instance.upload(
-        '/test',
-        {
-          'X-TOTAL-COUNT': '1'
-        },
-        data => {
-          data.some_field = '2';
-          return data;
-        }
-      );
-      expect(dataResponse.name).toBe(props.file.name);
-    });
-
-    test('error upload', async () => {
-      expect.assertions(3);
-      mock.post('/test', (request, response) => {
-        return response.status(412).body(JSON.stringify({}));
-      });
-      const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
-      const instance = mountComponent(props);
-      try {
-        await instance.upload('/test');
-      } catch (e) {
-        expect(Array.isArray(e.reasons)).toBeTruthy();
-        expect(e.reasons.length).toBe(1);
-        expect(e.reasons[0]).toBe(FilesUploaderErrorType.Upload);
-      }
-    });
-
-    test('test abort()', () => {
-      mock.post(
-        '/test',
-        (request, response) => {
-          return response.status(412).body(JSON.stringify({}));
-        },
-        3000
-      );
-      const props = mockPropsUploadingElement(COMPONENT_CHILD_ALIAS);
-      const instance = mountComponent(props);
-      try {
-        instance.upload('/test');
-        instance.abort();
-      } catch (e) {
-        expect(instance.xhr.status).toBe(0);
-      }
-    });
   });
 });
