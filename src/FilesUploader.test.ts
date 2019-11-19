@@ -44,9 +44,6 @@ describe('FilesUploader test', () => {
     instance.onDidAddFile(cb);
     instance.addFile(fileExample);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb).toHaveBeenCalledWith({
-      instance
-    });
   });
 
   test('addFileToQueue', () => {
@@ -92,7 +89,7 @@ describe('FilesUploader test', () => {
     });
 
     test('addFile, removeFile', async () => {
-      expect.assertions(3);
+      expect.assertions(4);
       const input = mockDefaultInput();
       mockServerRemoveSuccess();
       const instance = new FilesUploader(input, {
@@ -110,8 +107,11 @@ describe('FilesUploader test', () => {
       } catch (e) {
         expect(e.reasons[0]).toBe(FilesUploaderErrorType.Data);
       }
+      const onDidRemoveFile = jest.fn();
+      instance.onDidRemoveFile(onDidRemoveFile);
       await instance.removeFile(fileExample.path);
       expect(instance.files.length).toBe(0);
+      expect(onDidRemoveFile).toHaveBeenCalledTimes(1);
     });
   });
 

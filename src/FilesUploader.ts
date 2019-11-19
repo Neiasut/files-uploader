@@ -19,7 +19,9 @@ import {
   FilesUploaderErrorInfo,
   FilesUploaderFileData,
   FilesUploaderListElements,
+  FilesUploaderRemoveFileEvent,
   FilesUploaderSettings,
+  FilesUploaderUploadFileEvent,
   UploadingWrapper,
   UploadingWrapperProps
 } from './interfaces/interfaces';
@@ -226,14 +228,15 @@ export default class FilesUploader {
       element.setError(errorTypes);
     }
     this.fireDidAddFileToQueue({
-      instance: this
+      instance: this,
+      file
     });
     if (autoUpload && !element.error) {
       this.uploadFile(element, file);
     }
   }
 
-  private uploadFile(element: UploadingWrapper, file?: File) {
+  private uploadFile(element: UploadingWrapper, file: File) {
     const {
       server: { upload },
       maxFiles
@@ -246,6 +249,10 @@ export default class FilesUploader {
       element.upload(upload.url, upload.headers, upload.onData).then(dataResponse => {
         this.removeQueueFile(element);
         this.addFile(dataResponse, file);
+        this.fireDidUploadFile({
+          instance: this,
+          file
+        });
       });
     }
   }
@@ -283,7 +290,8 @@ export default class FilesUploader {
     ) as CompleteWrapper;
     this.files.add(element);
     this.fireDidAddFile({
-      instance: this
+      instance: this,
+      data
     });
   }
 
@@ -300,6 +308,10 @@ export default class FilesUploader {
     const body = await component.delete(remove.url, remove.headers, remove.onData);
     ComponentPerformer.unmountComponent(component);
     this.files.remove(component.id);
+    this.fireDidRemoveFile({
+      instance: this,
+      data: component.props.data
+    });
     return body;
   }
 
@@ -317,6 +329,22 @@ export default class FilesUploader {
   }
   private fireDidAddFile(event: FilesUploaderAddFileEvent) {
     this.didAddFileDispatcher.fire(event);
+  }
+
+  private didRemoveFileDispatcher = new EventDispatcher<FilesUploaderRemoveFileEvent>();
+  onDidRemoveFile(handler: Handler<FilesUploaderRemoveFileEvent>) {
+    this.didRemoveFileDispatcher.register(handler);
+  }
+  private fireDidRemoveFile(event: FilesUploaderRemoveFileEvent) {
+    this.didRemoveFileDispatcher.fire(event);
+  }
+
+  private didUploadFileDispatcher = new EventDispatcher<FilesUploaderUploadFileEvent>();
+  onDidUploadFile(handler: Handler<FilesUploaderUploadFileEvent>) {
+    this.didUploadFileDispatcher.register(handler);
+  }
+  private fireDidUploadFile(event: FilesUploaderUploadFileEvent) {
+    this.didUploadFileDispatcher.fire(event);
   }
 
   addFiles(arrFiles: FilesUploaderFileData[]) {

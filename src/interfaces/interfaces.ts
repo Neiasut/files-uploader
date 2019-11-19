@@ -74,12 +74,24 @@ export interface FilesUploaderFileInfo {
   readonly size: number;
 }
 
-export interface FilesUploaderAddFileToQueueEvent {
+interface FilesUploaderEvent {
   instance: FilesUploader;
 }
 
-export interface FilesUploaderAddFileEvent {
-  instance: FilesUploader;
+export interface FilesUploaderAddFileToQueueEvent extends FilesUploaderEvent {
+  file: File;
+}
+
+export interface FilesUploaderAddFileEvent extends FilesUploaderEvent {
+  data: FilesUploaderFileData;
+}
+
+export interface FilesUploaderRemoveFileEvent extends FilesUploaderEvent {
+  data: FilesUploaderFileData;
+}
+
+export interface FilesUploaderUploadFileEvent extends FilesUploaderEvent {
+  file: File;
 }
 
 export interface FilesUploaderFileData extends FilesUploaderFileInfo {
