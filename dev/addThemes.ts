@@ -1,4 +1,5 @@
 import FilesUploader from '../src/FilesUploader';
+import { FilesUploaderComponentButtonTypes } from '../src/enums/enums';
 
 FilesUploader.themes.add('testSettings', {
   settings: {

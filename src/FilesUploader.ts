@@ -10,7 +10,13 @@ import {
   validateFileExtension,
   validateFileSize
 } from './functions/functions';
-import { createListElements, createListWrapper, createLoader } from './functions/constructors';
+import {
+  createDefaultIcon,
+  createListElements,
+  createListWrapper,
+  createLoader,
+  createSprite
+} from './functions/constructors';
 import {
   CompleteWrapper,
   CompleteWrapperProps,
@@ -27,6 +33,7 @@ import {
   UploadingWrapperProps
 } from './interfaces/interfaces';
 import {
+  FilesUploaderComponentButtonTypes,
   FilesUploaderDefaultComponentAliases,
   FilesUploaderErrorType,
   FilesUploaderStatus,
@@ -43,6 +50,8 @@ import { factoryDefaultCompleteComponent } from './DefaultCompleteComponent';
 import FilesUploaderError from './errors/FileUploaderError';
 import { Server } from './Server';
 
+document.body.appendChild(createSprite());
+
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.UploadingElement, factoryUploadingElement);
 ComponentPerformer.addFactory(FilesUploaderDefaultComponentAliases.CompleteElement, factoryCompleteElement);
 ComponentPerformer.addFactory(
@@ -53,6 +62,10 @@ ComponentPerformer.addFactory(
   FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
   factoryDefaultCompleteComponent
 );
+
+(() => {
+  document.body.appendChild(createSprite());
+})();
 
 export default class FilesUploader {
   elements: FilesUploaderListElements;
@@ -121,7 +134,21 @@ export default class FilesUploader {
       autoUpload: false,
       factoryUploadingComponentAlias: FilesUploaderDefaultComponentAliases.DefaultUploadingComponent,
       factoryCompleteComponentAlias: FilesUploaderDefaultComponentAliases.DefaultCompleteComponent,
-      imageView: false
+      imageView: false,
+      buttons: {
+        [FilesUploaderComponentButtonTypes.Upload]: {
+          inner: createDefaultIcon('upload'),
+          title: 'upload'
+        },
+        [FilesUploaderComponentButtonTypes.Cancel]: {
+          inner: createDefaultIcon('cancel'),
+          title: 'cancel'
+        },
+        [FilesUploaderComponentButtonTypes.Remove]: {
+          inner: createDefaultIcon('remove'),
+          title: 'remove'
+        }
+      }
     };
   }
 
@@ -215,7 +242,8 @@ export default class FilesUploader {
       },
       cancel: () => {
         this.removeQueueFile(element);
-      }
+      },
+      buttonConstructor: this.createComponentButton
     };
     const element = ComponentPerformer.mountComponent(
       this.elements.uploadingList,
@@ -301,6 +329,7 @@ export default class FilesUploader {
       file,
       imageElement,
       data,
+      buttonConstructor: this.createComponentButton,
       remove: async () => {
         await this.removeFile(data.path);
       }
@@ -392,5 +421,20 @@ export default class FilesUploader {
 
   private getErrorTexts = (errors: FilesUploaderErrorType[]): FilesUploaderErrorInfo[] => {
     return getFilesUploaderErrorInfo(errors, this.configuration.errorTexts);
+  };
+
+  private createComponentButton = (type: FilesUploaderComponentButtonTypes): HTMLButtonElement => {
+    const info = this.configuration.buttons[type];
+    const button = document.createElement('button');
+    button.type = 'button';
+    if (Array.isArray(info.classes)) {
+      button.classList.add(...info.classes);
+    }
+    if (typeof info.title === 'string') {
+      button.title = info.title;
+    }
+    button.innerHTML = info.inner;
+
+    return button;
   };
 }

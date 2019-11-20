@@ -27,3 +27,9 @@ export enum FilesUploaderDefaultComponentAliases {
   DefaultUploadingComponent = 'defaultUploadingComponent',
   DefaultCompleteComponent = 'defaultCompleteComponent'
 }
+
+export enum FilesUploaderComponentButtonTypes {
+  Upload = 'upload',
+  Cancel = 'cancel',
+  Remove = 'remove'
+}

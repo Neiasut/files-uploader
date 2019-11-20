@@ -71,16 +71,22 @@ export const mockQueueElement = (id: string, status = FilesUploaderStatus.Comple
   id
 });
 
+export const mockButtonConstructor = (): HTMLButtonElement => {
+  return document.createElement('button');
+};
+
 export const mockPropsUploadingComponent = (): UploadingComponentProps => ({
   file: mockDefaultFile(),
   cancel: jest.fn(),
-  upload: jest.fn()
+  upload: jest.fn(),
+  buttonConstructor: mockButtonConstructor
 });
 
 export const mockPropsCompleteComponent = (): CompleteComponentProps => ({
   imageElement: createImage('/test.jpg'),
   data: mockFilesUploaderFileData(),
-  remove: jest.fn()
+  remove: jest.fn(),
+  buttonConstructor: mockButtonConstructor
 });
 
 export const mockPropsUploadingElement = (factoryChildAlias: string): UploadingWrapperProps => ({
@@ -99,7 +105,8 @@ export const mockPropsUploadingElement = (factoryChildAlias: string): UploadingW
   }),
   imageElement: createImage('/test.png'),
   upload: jest.fn(),
-  cancel: jest.fn()
+  cancel: jest.fn(),
+  buttonConstructor: mockButtonConstructor
 });
 
 export const mockPropsCompleteElement = (factoryChildAlias: string): CompleteWrapperProps => ({
@@ -118,5 +125,6 @@ export const mockPropsCompleteElement = (factoryChildAlias: string): CompleteWra
         type: FilesUploaderErrorType.Data
       }
     ];
-  })
+  }),
+  buttonConstructor: mockButtonConstructor
 });

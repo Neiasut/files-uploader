@@ -47,7 +47,8 @@ export class UploadingElement implements UploadingWrapper {
       file: this.props.file,
       imageElement: this.props.imageElement,
       upload: this.props.upload,
-      cancel: this.props.cancel
+      cancel: this.props.cancel,
+      buttonConstructor: this.props.buttonConstructor
     };
     return [
       {

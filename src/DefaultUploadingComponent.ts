@@ -5,8 +5,7 @@ import {
   UploadingComponent,
   UploadingComponentProps
 } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
-import { createButtonAsString } from './functions/constructors';
+import { FilesUploaderComponentButtonTypes, FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 import ComponentPerformer from './ComponentPerformer';
 
 export class DefaultUploadingComponent implements UploadingComponent {
@@ -26,7 +25,7 @@ export class DefaultUploadingComponent implements UploadingComponent {
   render(): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.classList.add('FilesUploaderUploadingComponent');
-    const { imageElement } = this.props;
+    const { imageElement, buttonConstructor } = this.props;
     if (imageElement) {
       const wrapperImage = document.createElement('div');
       wrapperImage.classList.add('FilesUploaderUploadingComponent-ImageWrapper');
@@ -43,19 +42,28 @@ export class DefaultUploadingComponent implements UploadingComponent {
         </div>
         <span class="FilesUploaderUploadingComponent-Percentage"></span>
       </div>
-      <div class="FilesUploaderUploadingComponent-Buttons">
-        ${createButtonAsString('upload', [
-          'FilesUploaderComponentButton',
-          'FilesUploaderUploadingComponent-Button',
-          'FilesUploaderUploadingComponent-Button_target_upload'
-        ])}
-        ${createButtonAsString('cancel', [
-          'FilesUploaderComponentButton',
-          'FilesUploaderUploadingComponent-Button',
-          'FilesUploaderUploadingComponent-Button_target_cancel'
-        ])}
-      </div>
+      <div class="FilesUploaderUploadingComponent-Buttons"></div>
     `;
+
+    const buttonUpload = buttonConstructor(FilesUploaderComponentButtonTypes.Upload);
+    buttonUpload.classList.add(
+      ...[
+        'FilesUploaderComponentButton',
+        'FilesUploaderUploadingComponent-Button',
+        'FilesUploaderUploadingComponent-Button_target_upload'
+      ]
+    );
+    const buttonCancel = buttonConstructor(FilesUploaderComponentButtonTypes.Cancel);
+    buttonCancel.classList.add(
+      ...[
+        'FilesUploaderComponentButton',
+        'FilesUploaderUploadingComponent-Button',
+        'FilesUploaderUploadingComponent-Button_target_cancel'
+      ]
+    );
+    const buttonsWrapper = wrapper.querySelector('.FilesUploaderUploadingComponent-Buttons');
+    buttonsWrapper.appendChild(buttonUpload);
+    buttonsWrapper.appendChild(buttonCancel);
 
     return wrapper;
   }

@@ -5,8 +5,7 @@ import {
   FilesUploaderAvailableStatusesComplete,
   FilesUploaderErrorInfo
 } from './interfaces/interfaces';
-import { FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
-import { createButtonAsString } from './functions/constructors';
+import { FilesUploaderComponentButtonTypes, FilesUploaderErrorType, FilesUploaderStatus } from './enums/enums';
 import ComponentPerformer from './ComponentPerformer';
 
 export class DefaultCompleteComponent implements CompleteComponent {
@@ -23,7 +22,7 @@ export class DefaultCompleteComponent implements CompleteComponent {
   render(): HTMLElement {
     const root = document.createElement('div');
     root.classList.add('FilesUploaderCompleteComponent');
-    const { imageElement } = this.props;
+    const { imageElement, buttonConstructor } = this.props;
     if (imageElement) {
       const wrapperImage = document.createElement('div');
       wrapperImage.classList.add('FilesUploaderCompleteComponent-ImageWrapper');
@@ -39,11 +38,18 @@ export class DefaultCompleteComponent implements CompleteComponent {
           <div class="FilesUploaderCompleteComponent-Errors"></div>
         </div>
       </div>
-      <span class="FilesUploaderCompleteComponent-Actions">${createButtonAsString('remove', [
-        'FilesUploaderComponentButton',
-        'FilesUploaderCompleteComponent-Button'
-      ])}</span>
+      <span class="FilesUploaderCompleteComponent-Buttons"></span>
     `;
+    const buttonRemove = buttonConstructor(FilesUploaderComponentButtonTypes.Remove);
+    buttonRemove.classList.add(
+      ...[
+        'FilesUploaderComponentButton',
+        'FilesUploaderCompleteComponent-Button',
+        'FilesUploaderCompleteComponent-Button_target_remove'
+      ]
+    );
+    root.querySelector('.FilesUploaderCompleteComponent-Buttons').appendChild(buttonRemove);
+
     return root;
   }
 
@@ -65,7 +71,7 @@ export class DefaultCompleteComponent implements CompleteComponent {
 
   componentDidMount(): void {
     const root = ComponentPerformer.getRenderRoot(this);
-    this.buttonRemove = root.querySelector('button');
+    this.buttonRemove = root.querySelector('.FilesUploaderCompleteComponent-Button_target_remove');
     this.buttonRemove.addEventListener('click', this.handleClickRemove);
     this.textErrorElement = root.querySelector('.FilesUploaderCompleteComponent-Errors');
     this.statusElement = root.querySelector('.FilesUploaderCompleteComponent-Status');

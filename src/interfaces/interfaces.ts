@@ -1,4 +1,4 @@
-import { FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
+import { FilesUploaderComponentButtonTypes, FilesUploaderErrorType, FilesUploaderStatus } from '../enums/enums';
 import FilesUploader from '../FilesUploader';
 import { ServerRequest } from '../Server';
 
@@ -34,6 +34,12 @@ interface FilesUploaderActions {
   remove?: FilesUploaderActionInfo;
 }
 
+export interface FilesUploaderComponentButton {
+  inner: string;
+  classes?: string[];
+  title?: string;
+}
+
 export interface FilesUploaderSettings {
   maxSize?: number;
   maxFiles?: number;
@@ -46,6 +52,7 @@ export interface FilesUploaderSettings {
   errorTexts?: FilesUploaderErrorTexts;
   imageView?: boolean;
   server?: FilesUploaderActions;
+  buttons?: FilesUploaderComponentButtons;
 }
 
 export interface FilesUploaderConfiguration extends FilesUploaderSettings {
@@ -62,8 +69,11 @@ export interface FilesUploaderConfiguration extends FilesUploaderSettings {
   server: FilesUploaderActions;
 }
 
-export type FilesUploaderStatusTexts = Record<FilesUploaderStatus, string>;
-export type FilesUploaderErrorTexts = Record<FilesUploaderErrorType, string>;
+export type FilesUploaderStatusTexts = Partial<Record<FilesUploaderStatus, string>>;
+export type FilesUploaderErrorTexts = Partial<Record<FilesUploaderErrorType, string>>;
+export type FilesUploaderComponentButtons = Partial<
+  Record<FilesUploaderComponentButtonTypes, FilesUploaderComponentButton>
+>;
 
 export interface FilesUploaderErrorInfo {
   type: FilesUploaderErrorType;
@@ -143,6 +153,7 @@ interface WrapperProps {
   getStatusText(status: FilesUploaderStatus): string;
   getErrorTexts(errors: FilesUploaderErrorType[]): FilesUploaderErrorInfo[];
   imageElement?: HTMLImageElement;
+  buttonConstructor(type: FilesUploaderComponentButtonTypes): HTMLButtonElement;
 }
 
 export interface UploadingWrapperProps extends WrapperProps {
@@ -176,9 +187,13 @@ export interface CompleteWrapper extends Component<CompleteWrapperProps>, QueueE
   removeRequest?: ServerRequest<any>;
 }
 
-export interface UploadingComponentProps {
-  file: File;
+interface ComponentProps {
   imageElement?: HTMLImageElement;
+  buttonConstructor(type: FilesUploaderComponentButtonTypes): HTMLButtonElement;
+}
+
+export interface UploadingComponentProps extends ComponentProps {
+  file: File;
   upload(): void;
   cancel(): void;
 }
@@ -189,8 +204,7 @@ export interface UploadingComponent extends Component<UploadingComponentProps> {
   onChangePercent(percent: number): void;
 }
 
-export interface CompleteComponentProps {
-  imageElement?: HTMLImageElement;
+export interface CompleteComponentProps extends ComponentProps {
   data: FilesUploaderFileData;
   remove(): void;
 }

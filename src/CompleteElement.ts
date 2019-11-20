@@ -49,7 +49,8 @@ export class CompleteElement implements CompleteWrapper {
     const childrenProps: CompleteComponentProps = {
       imageElement: this.props.imageElement,
       data: this.props.data,
-      remove: this.props.remove
+      remove: this.props.remove,
+      buttonConstructor: this.props.buttonConstructor
     };
     return [
       {
