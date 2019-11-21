@@ -64,6 +64,7 @@ test('getFileExtension', () => {
 
 test('validateFileExtension', () => {
   const file = mockDefaultFile();
+  expect(validateFileExtension(file, [])).toBeTruthy();
   expect(validateFileExtension(file, ['txt', 'js'])).toBeTruthy();
   expect(validateFileExtension(file, ['js', 'ts', 'tsx'])).toBeFalsy();
 });

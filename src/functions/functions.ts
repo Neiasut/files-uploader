@@ -55,6 +55,9 @@ export const getFileExtension = (fileName: string): string => {
 
 export const validateFileExtension = (file: File, acceptTypes: string[]): boolean => {
   const extension = getFileExtension(file.name).toLowerCase();
+  if (acceptTypes.length < 1) {
+    return true;
+  }
   return acceptTypes.some(availableExtension => availableExtension.toLowerCase() === extension);
 };
 

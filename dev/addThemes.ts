@@ -3,7 +3,7 @@ import { FilesUploaderComponentButtonTypes } from '../src/enums/enums';
 
 FilesUploader.themes.add('testSettings', {
   settings: {
-    acceptTypes: ['exe', 'jpg'],
+    acceptTypes: [],
     maxSize: 6 * 1204 * 1024,
     autoUpload: false,
     server: {
