@@ -11,8 +11,9 @@
     "test:coverage": "jest --coverage",
     "build-dev": "webpack --config ./config/webpack/webpack.config.js --mode development --build",
     "build-prod": "webpack --config ./config/webpack/webpack.config.js --mode production --build",
-    "pack-all": "npm run build-prod && npm run build-dev",
-    "lint": "tslint -p ./ --fix"
+    "pack-all": "npm run build-prod && npm run build-dev && npm run check-size",
+    "lint": "tslint -p ./ --fix",
+    "check-size": "node ./scripts/checkSize.js"
   },
   "keywords": [
     "upload",
@@ -39,6 +40,7 @@
     "babel-loader": "^8.0.6",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^3.2.0",
+    "gzip-size": "^5.1.1",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^3.0.8",
     "identity-obj-proxy": "^3.0.0",
