@@ -1,4 +1,3 @@
-import './styles/FilesUploader.scss';
 import {
   calcPercentage,
   getElementImage,

@@ -16,11 +16,11 @@ module.exports = function(argv) {
 
   if (prod) {
     entry = {
-      'filesUploader.min': rootPath + '/src/FilesUploader.ts'
+      'filesUploader.min': [rootPath + '/src/global.ts', rootPath + '/src/styles/FilesUploader.scss']
     }
   } else {
     entry = {
-      'filesUploader': rootPath + '/src/FilesUploader.ts'
+      'filesUploader': [rootPath + '/src/global.ts', rootPath + '/src/styles/FilesUploader.scss']
     }
   }
   if (argv.build && prod) {
@@ -39,7 +39,7 @@ module.exports = function(argv) {
     },
     plugins: plugins,
     resolve: {
-      extensions: ['.ts', '.js', '.json']
+      extensions: ['.ts', '.js']
     },
     externals: {}
   };
