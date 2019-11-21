@@ -11,9 +11,10 @@
     "test:coverage": "jest --coverage",
     "build-dev": "webpack --config ./config/webpack/webpack.config.js --mode development --build",
     "build-prod": "webpack --config ./config/webpack/webpack.config.js --mode production --build",
-    "pack-all": "npm run build-prod && npm run build-dev && npm run check-size",
+    "build": "npm run build-prod && npm run build-dev && npm run check-size",
     "lint": "tslint -p ./ --fix",
-    "check-size": "node ./scripts/checkSize.js"
+    "check-size": "node ./scripts/checkSize.js",
+    "prepare": "npm run build"
   },
   "keywords": [
     "upload",
