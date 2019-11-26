@@ -1,7 +1,7 @@
 module.exports = api => {
   api.cache.using(() => process.env.NODE_ENV);
   return {
-    "presets": [
+    presets: [
       "@babel/typescript",
       [
         "@babel/preset-env",
@@ -10,6 +10,20 @@ module.exports = api => {
         }
       ]
     ],
-    "plugins": ["@babel/plugin-proposal-class-properties"]
+    plugins: [
+      [
+        "@babel/plugin-proposal-decorators",
+        {
+          legacy: true
+        }
+      ],
+      [
+        "@babel/plugin-proposal-class-properties",
+        {
+          loose: true
+        }
+      ],
+      "@babel/plugin-transform-runtime"
+    ]
   };
 };

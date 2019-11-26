@@ -4,6 +4,7 @@ const rootPath = functions.getRootPath();
 
 const getDefaultConfig = () => {
   return {
+    entry: [rootPath + '/dev/script.ts', rootPath + '/src/styles/FilesUploader.scss'],
     watchOptions: {
       aggregateTimeout: 3000,
       poll: 1000
@@ -28,7 +29,6 @@ const getWatchConfig = () => {
       template: rootPath + '/dev/index.html'
     })
   );
-  config.entry = rootPath + '/dev/script.ts';
 
   return config;
 };

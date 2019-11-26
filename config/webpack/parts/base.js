@@ -16,14 +16,14 @@ module.exports = function(argv) {
 
   if (prod) {
     entry = {
-      'fileUploader.min': rootPath + '/src/FilesUploader.ts'
+      'filesUploader.min': [rootPath + '/src/global.ts', rootPath + '/src/styles/FilesUploader.scss']
     }
   } else {
     entry = {
-      'fileUploader': rootPath + '/src/FilesUploader.ts'
+      'filesUploader': [rootPath + '/src/global.ts', rootPath + '/src/styles/FilesUploader.scss']
     }
   }
-  if (!functions.checkWatch(argv) && prod) {
+  if (argv.build && prod) {
     plugins.unshift(
       new CleanWebpackPlugin()
     );
@@ -39,7 +39,7 @@ module.exports = function(argv) {
     },
     plugins: plugins,
     resolve: {
-      extensions: ['.ts', '.js', '.json']
+      extensions: ['.ts', '.js']
     },
     externals: {}
   };

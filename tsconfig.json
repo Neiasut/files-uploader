@@ -6,10 +6,11 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "baseUrl": "./",
-    "target": "es2018",
-    "allowJs": true,
+    "target": "es2019",
+    "allowJs": false,
     "downlevelIteration": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true
   },
   "include": [
     "./src/**/*.ts"
