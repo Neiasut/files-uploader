@@ -1,5 +1,6 @@
 import FilesUploader from '../src/FilesUploader';
 import './addThemes';
+import { FilesUploaderEvents } from '../src/enums/enums';
 
 const instance = new FilesUploader(
   '#example1',
@@ -36,7 +37,7 @@ const instance = new FilesUploader(
   ]
 );
 
-instance.onDidAddFileToQueue(event => {
+instance.dispatchers[FilesUploaderEvents.DidAddFileToQueue].register(event => {
   console.log('azazaza', event.instance);
 });
 
@@ -56,3 +57,10 @@ console.log(instance2);
 
 const instance3 = new FilesUploader('#errorField', {}, ['errorUpload']);
 console.log(instance3);
+
+setTimeout(() => {
+  const instance4 = new FilesUploader('#destroyField');
+  setTimeout(() => {
+    instance4.destroy();
+  }, 4000);
+}, 1000);

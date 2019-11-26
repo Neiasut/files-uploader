@@ -1,5 +1,5 @@
 import FilesUploader from '../src/FilesUploader';
-import { FilesUploaderComponentButtonTypes } from '../src/enums/enums';
+import { FilesUploaderEvents } from '../src/enums/enums';
 
 FilesUploader.themes.add('testSettings', {
   settings: {
@@ -19,8 +19,8 @@ FilesUploader.themes.add('testSettings', {
 
 FilesUploader.themes.add('test', {
   afterConstructor(instanceTheme) {
-    instanceTheme.onDidAddFileToQueue(() => {
-      console.log('theme test on add file to queue!');
+    instanceTheme.dispatchers[FilesUploaderEvents.DidAddFileToQueue].register(() => {
+      console.log('theme test2 on add file to queue!');
     });
     console.log('theme 1');
   }
@@ -28,7 +28,7 @@ FilesUploader.themes.add('test', {
 
 FilesUploader.themes.add('test2', {
   afterConstructor(instanceTheme) {
-    instanceTheme.onDidAddFileToQueue(() => {
+    instanceTheme.dispatchers[FilesUploaderEvents.DidAddFileToQueue].register(() => {
       console.log('theme test2 on add file to queue!');
     });
     console.log('theme 2');

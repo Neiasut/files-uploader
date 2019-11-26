@@ -3,7 +3,7 @@ import { mockDefaultFile, mockDefaultInput, mockFilesUploaderFileData } from './
 // @ts-ignore
 import mock from 'xhr-mock';
 import { mockServerRemoveSuccess, mockServerUploadSuccess } from './__mock__/servers';
-import { FilesUploaderErrorType } from './enums/enums';
+import { FilesUploaderErrorType, FilesUploaderEvents } from './enums/enums';
 
 describe('FilesUploader test', () => {
   afterEach(() => {
@@ -30,7 +30,7 @@ describe('FilesUploader test', () => {
     const event = document.createEvent('UIEvents');
     event.initEvent('change', true, true);
     const cb = jest.fn();
-    instance.onDidAddFileToQueue(cb);
+    instance.dispatchers[FilesUploaderEvents.DidAddFileToQueue].register(cb);
     input.dispatchEvent(event);
     expect(spyOnAddFiles).toHaveBeenCalled();
     expect(input.value).toBe('');
@@ -56,7 +56,7 @@ describe('FilesUploader test', () => {
     const instance = new FilesUploader('#test');
     const fileExample = mockFilesUploaderFileData();
     const cb = jest.fn();
-    instance.onDidAddFile(cb);
+    instance.dispatchers[FilesUploaderEvents.DidAddFileToCompleteList].register(cb);
     instance.addFiles([fileExample]);
     expect(cb).toHaveBeenCalledTimes(1);
   });
@@ -96,8 +96,8 @@ describe('FilesUploader test', () => {
       const fileExample = mockDefaultFile();
       const onDidAddFile = jest.fn();
       const onDidUploadFile = jest.fn();
-      instance.onDidAddFileToQueue(onDidAddFile);
-      instance.onDidUploadFile(onDidUploadFile);
+      instance.dispatchers[FilesUploaderEvents.DidAddFileToQueue].register(onDidAddFile);
+      instance.dispatchers[FilesUploaderEvents.DidAddFileToCompleteList].register(onDidUploadFile);
       // @ts-ignore
       const element = instance.addFileToQueue(fileExample);
       // @ts-ignore
@@ -110,7 +110,7 @@ describe('FilesUploader test', () => {
     });
 
     test('addFile, removeFile', async () => {
-      expect.assertions(4);
+      expect.assertions(5);
       const input = mockDefaultInput();
       mockServerRemoveSuccess();
       const instance = new FilesUploader(input, {
@@ -129,10 +129,13 @@ describe('FilesUploader test', () => {
         expect(e.reasons[0]).toBe(FilesUploaderErrorType.Data);
       }
       const onDidRemoveFile = jest.fn();
-      instance.onDidRemoveFile(onDidRemoveFile);
+      const onDidRemoveFromList = jest.fn();
+      instance.dispatchers[FilesUploaderEvents.DidRemoveFileFromCompleteList].register(onDidRemoveFromList);
+      instance.dispatchers[FilesUploaderEvents.DidRemoveFile].register(onDidRemoveFile);
       await instance.removeFile(fileExample.path);
       expect(instance.files.length).toBe(0);
       expect(onDidRemoveFile).toHaveBeenCalledTimes(1);
+      expect(onDidRemoveFromList).toHaveBeenCalled();
     });
   });
 
@@ -160,4 +163,33 @@ describe('FilesUploader test', () => {
     expect(spyAddFile).toHaveBeenCalledTimes(2);
     spyAddFile.mockRestore();
   });
+});
+
+test('destroy', () => {
+  const input = mockDefaultInput();
+  const cbOnRemoveFromQueue = jest.fn();
+  const cbOnRemoveFromQueueCompletes = jest.fn();
+  const instance = new FilesUploader(
+    input,
+    {},
+    [],
+    [
+      {
+        name: 'test.txt',
+        size: 400,
+        path: '/test.txt'
+      },
+      {
+        name: 'test.txt',
+        size: 400,
+        path: '/test.txt'
+      }
+    ]
+  );
+  instance.dispatchers[FilesUploaderEvents.DidRemoveFileFromQueue].register(cbOnRemoveFromQueue);
+  instance.dispatchers[FilesUploaderEvents.DidRemoveFile].register(cbOnRemoveFromQueueCompletes);
+  instance.destroy();
+  expect(input.getAttribute('class')).toBe('');
+  expect(cbOnRemoveFromQueue).not.toHaveBeenCalled();
+  expect(cbOnRemoveFromQueueCompletes).not.toHaveBeenCalled();
 });

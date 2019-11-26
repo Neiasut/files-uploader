@@ -5,6 +5,7 @@
   "repository": "https://github.com/Neiasut/files-uploader",
   "author": "neiasut <kerlaeeda@gmail.com>",
   "license": "MIT",
+  "description": "ts library, which creates files uploader",
   "scripts": {
     "watch:dev-server": "webpack-dev-server --config ./config/webpack/webpack.config.js --inline --hot --mode development --devServer",
     "test": "jest",

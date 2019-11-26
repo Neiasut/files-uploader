@@ -6,6 +6,7 @@ import {
   getQueryElement,
   mergeDeepConfig,
   setInput,
+  unsetInput,
   validateFileExtension,
   validateFileSize
 } from './functions/functions';
@@ -19,15 +20,18 @@ import {
 import {
   CompleteWrapper,
   CompleteWrapperProps,
-  FilesUploaderAddFileEvent,
+  FilesUploaderAddFileToListEvent,
   FilesUploaderAddFileToQueueEvent,
   FilesUploaderConfiguration,
   FilesUploaderErrorInfo,
   FilesUploaderFileData,
+  FilesUploaderFileRemoveEvent,
+  FilesUploaderFileUploadEvent,
   FilesUploaderListElements,
-  FilesUploaderRemoveFileEvent,
+  FilesUploaderRemoveFileFromListEvent,
+  FilesUploaderRemoveFileFromQueueEvent,
   FilesUploaderSettings,
-  FilesUploaderUploadFileEvent,
+  QueueDidChangeLengthEvent,
   UploadingWrapper,
   UploadingWrapperProps
 } from './interfaces/interfaces';
@@ -35,6 +39,7 @@ import {
   FilesUploaderComponentButtonTypes,
   FilesUploaderDefaultComponentAliases,
   FilesUploaderErrorType,
+  FilesUploaderEvents,
   FilesUploaderStatus,
   FilesUploaderTypeFile
 } from './enums/enums';
@@ -66,6 +71,17 @@ ComponentPerformer.addFactory(
   document.body.appendChild(createSprite());
 })();
 
+interface FilesUploaderListener<T> {
+  eventType?: string;
+  cb: T;
+}
+
+interface FilesUploaderListeners {
+  inputChange: FilesUploaderListener<() => void>;
+  changeLengthQueue: FilesUploaderListener<Handler<QueueDidChangeLengthEvent<UploadingWrapper>>>;
+  changeLengthFiles: FilesUploaderListener<Handler<QueueDidChangeLengthEvent<CompleteWrapper>>>;
+}
+
 export default class FilesUploader {
   elements: FilesUploaderListElements;
   settings: FilesUploaderSettings;
@@ -73,6 +89,7 @@ export default class FilesUploader {
   private queue: Queue<UploadingWrapper> = new Queue();
   files: Queue<CompleteWrapper> = new Queue();
   private counterLoadFiles = 0;
+  private listeners: FilesUploaderListeners;
 
   constructor(
     query: string | HTMLInputElement,
@@ -193,28 +210,71 @@ export default class FilesUploader {
   }
 
   private addListeners() {
-    this.elements.input.addEventListener('change', () => {
-      const { input } = this.elements;
-      const files = Array.from(input.files);
-      this.addFilesToQueue(files);
-      input.value = '';
-    });
-    this.queue.onDidChangeLength(lengthQueue => {
-      const { wrapper } = this.elements;
-      if (lengthQueue > 0) {
-        wrapper.classList.add('hasUploadingFiles');
-      } else {
-        wrapper.classList.remove('hasUploadingFiles');
+    const { input } = this.elements;
+    const listeners: FilesUploaderListeners = {
+      inputChange: {
+        eventType: 'change',
+        cb: () => {
+          const files = Array.from(input.files);
+          this.addFilesToQueue(files);
+          input.value = '';
+        }
+      },
+      changeLengthQueue: {
+        cb: event => {
+          const { wrapper } = this.elements;
+          if (event.queueLength > 0) {
+            wrapper.classList.add('hasUploadingFiles');
+          } else {
+            wrapper.classList.remove('hasUploadingFiles');
+          }
+          if (event.queueOldLength < event.queueLength) {
+            this.dispatchers[FilesUploaderEvents.DidAddFileToQueue].fire({
+              instance: this,
+              file: event.element.props.file
+            });
+          } else {
+            this.dispatchers[FilesUploaderEvents.DidRemoveFileFromQueue].fire({
+              instance: this,
+              file: event.element.props.file
+            });
+          }
+        }
+      },
+      changeLengthFiles: {
+        cb: event => {
+          const { wrapper } = this.elements;
+          if (event.queueLength > 0) {
+            wrapper.classList.add('hasCompleteFiles');
+          } else {
+            wrapper.classList.remove('hasCompleteFiles');
+          }
+          if (event.queueOldLength < event.queueLength) {
+            this.dispatchers[FilesUploaderEvents.DidAddFileToCompleteList].fire({
+              instance: this,
+              data: event.element.props.data
+            });
+          } else {
+            this.dispatchers[FilesUploaderEvents.DidRemoveFileFromCompleteList].fire({
+              instance: this,
+              data: event.element.props.data
+            });
+          }
+        }
       }
-    });
-    this.files.onDidChangeLength(lengthFiles => {
-      const { wrapper } = this.elements;
-      if (lengthFiles > 0) {
-        wrapper.classList.add('hasCompleteFiles');
-      } else {
-        wrapper.classList.remove('hasCompleteFiles');
-      }
-    });
+    };
+    input.addEventListener(listeners.inputChange.eventType, listeners.inputChange.cb);
+    this.queue.didChangeLengthDispatcher.register(listeners.changeLengthQueue.cb);
+    this.files.didChangeLengthDispatcher.register(listeners.changeLengthFiles.cb);
+    this.listeners = listeners;
+  }
+
+  private removeListeners() {
+    const { input } = this.elements;
+    const listeners = this.listeners;
+    input.removeEventListener(listeners.inputChange.eventType, listeners.inputChange.cb);
+    this.queue.didChangeLengthDispatcher.unregister(listeners.changeLengthQueue.cb);
+    this.files.didChangeLengthDispatcher.unregister(listeners.changeLengthFiles.cb);
   }
 
   private addFilesToQueue(files: File[]) {
@@ -249,7 +309,6 @@ export default class FilesUploader {
       FilesUploaderDefaultComponentAliases.UploadingElement,
       props
     ) as UploadingWrapper;
-    this.queue.add(element);
     const errorTypes: FilesUploaderErrorType[] = [];
     if (!validateFileSize(file, maxSize)) {
       errorTypes.push(FilesUploaderErrorType.Size);
@@ -260,10 +319,7 @@ export default class FilesUploader {
     if (errorTypes.length > 0) {
       element.setError(errorTypes);
     }
-    this.fireDidAddFileToQueue({
-      instance: this,
-      file
-    });
+    this.queue.add(element);
     return element;
   }
 
@@ -290,12 +346,12 @@ export default class FilesUploader {
     element.uploadingRequest = request;
     try {
       const dataResponse = await request.send();
+      this.dispatchers[FilesUploaderEvents.DidUploadFile].fire({
+        instance: this,
+        file: element.props.file
+      });
       this.removeQueueFile(element);
       this.addFile(dataResponse, file);
-      this.fireDidUploadFile({
-        instance: this,
-        file
-      });
       return dataResponse;
     } catch (e) {
       if (e instanceof FilesUploaderError) {
@@ -339,10 +395,6 @@ export default class FilesUploader {
       props
     ) as CompleteWrapper;
     this.files.add(element);
-    this.fireDidAddFile({
-      instance: this,
-      data
-    });
   }
 
   async removeFile(path: string): Promise<any> {
@@ -360,12 +412,11 @@ export default class FilesUploader {
     component.setStatus(FilesUploaderStatus.Removing);
     try {
       const body = await request.send();
-      ComponentPerformer.unmountComponent(component);
-      this.files.remove(component.id);
-      this.fireDidRemoveFile({
+      this.dispatchers[FilesUploaderEvents.DidRemoveFile].fire({
         instance: this,
         data: component.props.data
       });
+      this.removeCompleteFileFromQueue(component);
       return body;
     } catch (e) {
       if (e instanceof FilesUploaderError) {
@@ -374,37 +425,22 @@ export default class FilesUploader {
     }
   }
 
-  private didAddFileToQueueDispatcher = new EventDispatcher<FilesUploaderAddFileToQueueEvent>();
-  onDidAddFileToQueue(handler: Handler<FilesUploaderAddFileToQueueEvent>) {
-    this.didAddFileToQueueDispatcher.register(handler);
-  }
-  private fireDidAddFileToQueue(event: FilesUploaderAddFileToQueueEvent) {
-    this.didAddFileToQueueDispatcher.fire(event);
-  }
-
-  private didAddFileDispatcher = new EventDispatcher<FilesUploaderAddFileEvent>();
-  onDidAddFile(handler: Handler<FilesUploaderAddFileEvent>) {
-    this.didAddFileDispatcher.register(handler);
-  }
-  private fireDidAddFile(event: FilesUploaderAddFileEvent) {
-    this.didAddFileDispatcher.fire(event);
+  private removeCompleteFileFromQueue(component: CompleteWrapper) {
+    if (component.removeRequest) {
+      component.removeRequest.xhr.abort();
+    }
+    this.files.remove(component.id);
+    ComponentPerformer.unmountComponent(component);
   }
 
-  private didRemoveFileDispatcher = new EventDispatcher<FilesUploaderRemoveFileEvent>();
-  onDidRemoveFile(handler: Handler<FilesUploaderRemoveFileEvent>) {
-    this.didRemoveFileDispatcher.register(handler);
-  }
-  private fireDidRemoveFile(event: FilesUploaderRemoveFileEvent) {
-    this.didRemoveFileDispatcher.fire(event);
-  }
-
-  private didUploadFileDispatcher = new EventDispatcher<FilesUploaderUploadFileEvent>();
-  onDidUploadFile(handler: Handler<FilesUploaderUploadFileEvent>) {
-    this.didUploadFileDispatcher.register(handler);
-  }
-  private fireDidUploadFile(event: FilesUploaderUploadFileEvent) {
-    this.didUploadFileDispatcher.fire(event);
-  }
+  dispatchers = {
+    [FilesUploaderEvents.DidAddFileToQueue]: new EventDispatcher<FilesUploaderAddFileToQueueEvent>(),
+    [FilesUploaderEvents.DidRemoveFileFromQueue]: new EventDispatcher<FilesUploaderRemoveFileFromQueueEvent>(),
+    [FilesUploaderEvents.DidAddFileToCompleteList]: new EventDispatcher<FilesUploaderAddFileToListEvent>(),
+    [FilesUploaderEvents.DidRemoveFileFromCompleteList]: new EventDispatcher<FilesUploaderRemoveFileFromListEvent>(),
+    [FilesUploaderEvents.DidUploadFile]: new EventDispatcher<FilesUploaderFileUploadEvent>(),
+    [FilesUploaderEvents.DidRemoveFile]: new EventDispatcher<FilesUploaderFileRemoveEvent>()
+  };
 
   addFiles(arrFiles: FilesUploaderFileData[]) {
     arrFiles.forEach(file => {
@@ -436,4 +472,17 @@ export default class FilesUploader {
 
     return button;
   };
+
+  destroy() {
+    this.removeListeners();
+    this.queue.fnToAll(queueElement => {
+      this.removeQueueFile(queueElement);
+    });
+    this.files.fnToAll(queueElement => {
+      this.removeCompleteFileFromQueue(queueElement);
+    });
+    this.elements.wrapper.parentNode.insertBefore(this.elements.input, this.elements.wrapper);
+    this.elements.wrapper.remove();
+    unsetInput(this.elements.input);
+  }
 }

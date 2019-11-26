@@ -48,3 +48,27 @@ test('updatePositionElement', () => {
   expect(elemInPos0.id).toBe('second');
   expect(elemInPos2.id).toBe('first');
 });
+
+test('didChangeLengthDispatcher', () => {
+  const instance = new Queue();
+  const cb = jest.fn();
+  instance.didChangeLengthDispatcher.register(cb);
+  const element = mockQueueElement('first', FilesUploaderStatus.Uploading);
+  instance.add(element);
+  expect(cb).toHaveBeenCalledTimes(1);
+  expect(cb).toHaveBeenCalledWith({
+    element,
+    queueLength: 1,
+    queueOldLength: 0
+  });
+  const element2 = mockQueueElement('second', FilesUploaderStatus.Uploading);
+  instance.add(element2);
+  expect(cb).toHaveBeenCalledTimes(2);
+  instance.remove(element2.id);
+  expect(cb).toHaveBeenCalledTimes(3);
+  expect(cb).toHaveBeenCalledWith({
+    element: element2,
+    queueLength: 1,
+    queueOldLength: 2
+  });
+});

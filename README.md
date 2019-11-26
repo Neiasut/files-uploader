@@ -1,6 +1,6 @@
 # files-uploader
 
-files-uploader is a ts library creates files uploader.
+files-uploader is a ts library, which creates files uploader. Size: min: 38 kB, gzip: 10.39 kB.
 
 ## Setup
 
@@ -14,9 +14,13 @@ npm install files-uploader --save
 yarn add files-uploader
 ```
 
-### Classic web with script tag
+### Add with tag script
+```html
+<link rel="stylesheet" href="dist/filesUploader.min.css">
+<script src="dist/filesUploader.min.js"></script>
+```
 ```js
-<script src="public/InputPlusMinusWindow.js"></script>
+new window.FilesUploader();
 ```
 
 ### ES6 import
@@ -35,25 +39,25 @@ const instance = new FilesUploader(
 ```
 
 ## InitElement
-Init element has types: string or Element.
+Initial element should by of 2 types: string or Element.
 
 ## Settings
 
 Interface: FilesUploaderSettings;
 
-| name field | required | default value | type/interface | info |
+| field name | required | default value | type/interface | info |
 |------------|----------|---------------|----------------|------|
 | server | false | * | FilesUploaderActions | server settings
-| maxSize | false | 10 * 1024 * 1024 | number | max size each file
-| maxFiles | false | 3 | number | max files for upload
-| acceptTypes | false | [] | string[] | array accepted file types
-| autoUpload | false | false | boolean | auto upload files
-| labels | false | ** | FilesUploaderLabels | labels plugin
+| maxSize | false | 10 * 1024 * 1024 | number | max size of each file
+| maxFiles | false | 3 | number | maximum number of files for uploading
+| acceptTypes | false | [] | string[] | array of accepted file types
+| autoUpload | false | false | boolean | autoload of files
+| labels | false | ** | FilesUploaderLabels | labels
 | statusTexts | false | *** | FilesUploaderStatusTexts | statuses texts
-| errorTexts | false | **** | FilesUploaderErrorTexts | Errors texts
-| imageView | false | false | boolean | Variables view images
-| factoryUploadingComponentAlias | false | 'defaultUploadingComponent' | string | alias uploading component
-| factoryCompleteComponentAlias | false | 'defaultCompleteComponent' | string | alias complete component
+| errorTexts | false | **** | FilesUploaderErrorTexts | errors texts
+| imageView | false | false | boolean | variable for image view
+| factoryUploadingComponentAlias | false | 'defaultUploadingComponent' | string | factory alias for uploading component
+| factoryCompleteComponentAlias | false | 'defaultCompleteComponent' | string | factory alias for complete component
 
 ### Server settings*
 
@@ -74,45 +78,45 @@ interface FilesUploaderSendData {
 }
 ```
 
-| name field | default value | type/interface | info |
+| field name | default value | type/interface | info |
 |------------|---------------|----------------|------|
-| upload | { url: '/' } | FilesUploaderActionInfo | uploading settings
+| upload | { url: '/' } | FilesUploaderActionInfo | upload settings
 | remove | { url: '/' } | FilesUploaderActionInfo | remove settings
 
 ### Labels**
 
-| name field | required | default value | type/interface | info |
+| field name | required | default value | type/interface | info |
 |------------|----------|---------------|----------------|------|
-| loader | false | 'Drag file here or select on device' | string | Text on loader
-| inProcessList | false | 'List uploading files' | string | Text on 
-| completeList | false | 'completeList' | string | Text on
+| loader | false | 'Drag file here or select on device' | string | text on loader
+| inProcessList | false | 'List uploading files' | string | label for uploading files list
+| completeList | false | 'completeList' | string | label for completed files list
 
 
 ### Statuses Texts***
 
-| name field | required | default value | type/interface | info |
+| field name | required | default value | type/interface | info |
 |------------|----------|---------------|----------------|------|
-| waitingUpload | false | 'Waiting upload' | string | 
-| uploading | false | 'Uploading file' | string | 
-| complete | false | 'File on server' | string | 
-| error | false | 'Error' | string | 
-| removing | false | 'Removing' | string | 
+| waitingUpload | false | 'Waiting upload' | string | waiting status text
+| uploading | false | 'Uploading file' | string | uploading status text
+| complete | false | 'File on server' | string | completed status text
+| error | false | 'Error' | string | error status text
+| removing | false | 'Removing' | string | removing status text
 
 ### Errors Texts****
 
-| name field | required | default value | type/interface | info |
-|------------|----------|---------------|----------------|------|
-| moreMaxFiles | false | 'More max files' | string | 
-| size | false | 'More max size file' | string | 
-| type | false | 'Not type' | string | 
-| network | false | 'Network error' | string | 
-| data | false | 'Error in data' | string | 
-| remove | false | 'Can not remove file' | string | 
-| upload | false | 'Can not upload file' | string | 
+| name field | required | default value | type/interface |
+|------------|----------|---------------|----------------|
+| moreMaxFiles | false | 'max number of files is exceeded' | string | 
+| size | false | 'max file size is exceeded' | string | 
+| type | false | 'file extension error' | string | 
+| network | false | 'network error' | string | 
+| data | false | 'data error' | string | 
+| remove | false | 'file can not be removed' | string | 
+| upload | false | 'file can not be uploaded' | string | 
 
 ## Themes
 
-Add theme
+Add a theme
 
 ```typescript
 import FilesUploader from 'FilesUploader';
@@ -139,7 +143,7 @@ FilesUploader.themes.add('testSettings', {
 });
 ```
 
-Use theme:
+Use a theme:
 
 ```typescript
 const instance = new FilesUploader(
@@ -155,7 +159,7 @@ const instance = new FilesUploader(
 
 ## Files
 
-Add files in constructor
+Add files in a constructor
 
 ```typescript
 const instance2 = new FilesUploader(
@@ -208,36 +212,71 @@ interface FilesUploaderFileData extends FilesUploaderFileInfo {
 ```
 
 #### addFile(data: FilesUploaderFileData): void
-Add file. Trigger DidAddFile.
+Add a file. Invoke callbacks for FilesUploaderAddFileToQueueEvent.
 
 #### addFiles(arrFiles: FilesUploaderFileData[]): void
-Add array files
+Add files array.
 
 #### removeFile(path: string): Promise<any>
-Remove file from server
+Remove a file from the server.
 
-## Callbacks
+#### destroy() 
+Destructor.
+
+## Callbacks(dispatchers)
 
 ```typescript
 type Handler<T> = (event: T) => void;
+
+enum FilesUploaderEvents {
+  DidAddFileToQueue = 'didAddFileToQueue',
+  DidRemoveFileFromQueue = 'didRemoveFileFromQueue',
+  DidAddFileToCompleteList = 'didAddFileToCompleteList',
+  DidRemoveFileFromCompleteList = 'didRemoveFileFromCompleteList',
+  DidUploadFile = 'didUploadFile',
+  DidRemoveFile = 'didRemoveFile'
+}
+
+class EventDispatcher<T> {
+    register(handler: Handler<T>) {}
+    unregister(handler: Handler<T>){}
+}
+
+instance.dispatchers = {
+    [FilesUploaderEvents.DidAddFileToQueue]: new EventDispatcher<FilesUploaderAddFileToQueueEvent>(),
+    [FilesUploaderEvents.DidRemoveFileFromQueue]: new EventDispatcher<FilesUploaderRemoveFileFromQueueEvent>(),
+    [FilesUploaderEvents.DidAddFileToCompleteList]: new EventDispatcher<FilesUploaderAddFileToListEvent>(),
+    [FilesUploaderEvents.DidRemoveFileFromCompleteList]: new EventDispatcher<FilesUploaderRemoveFileFromListEvent>(),
+    [FilesUploaderEvents.DidUploadFile]: new EventDispatcher<FilesUploaderFileUploadEvent>(),
+    [FilesUploaderEvents.DidRemoveFile]: new EventDispatcher<FilesUploaderFileRemoveEvent>()
+};
 ```
 
-#### onDidAddFileToQueue
-```typescript
-onDidAddFileToQueue(handler: Handler<FilesUploaderAddFileToQueueEvent>)
+## Work with the server
 
-interface FilesUploaderAddFileToQueueEvent {
-  instance: FilesUploader;
+### Upload
+send instance FormData to <instance.configuration.server.upload.url> with key file: File.
+SUCCESS: response HTTP status code: 200 with data (json): 
+```typescript
+interface SuccessResponse {
+    path: string;
+    name: string;
+    size: number;
+    extension: string;
 }
 ```
-#### onDidAddFile
+
+### Remove
+send json object to <instance.configuration.server.remove.url> with key path.
+SUCCESS: response HTTP status code: 204
+
+## Custom components
+
+Create custom component: create an implementation class interface CompleteComponent or UploadingComponent (/src/interfaces/interfaces.ts), create factory for this class.
+
+Examples: /src/DefaultCompleteComponent.ts, /src/DefaultUploadingComponent
+
+Add factory custom component:
 ```typescript
-onDidAddFile(handler: Handler<FilesUploaderAddFileEvent>)
-
-interface FilesUploaderAddFileEvent {
-  instance: FilesUploader;
-}
+ComponentPerformer.addFactory('aliasFactory', factoryComponent);
 ```
-
-## Work with server
-

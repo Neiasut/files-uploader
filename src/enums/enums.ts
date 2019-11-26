@@ -33,3 +33,12 @@ export enum FilesUploaderComponentButtonTypes {
   Cancel = 'cancel',
   Remove = 'remove'
 }
+
+export enum FilesUploaderEvents {
+  DidAddFileToQueue = 'didAddFileToQueue',
+  DidRemoveFileFromQueue = 'didRemoveFileFromQueue',
+  DidAddFileToCompleteList = 'didAddFileToCompleteList',
+  DidRemoveFileFromCompleteList = 'didRemoveFileFromCompleteList',
+  DidUploadFile = 'didUploadFile',
+  DidRemoveFile = 'didRemoveFile'
+}

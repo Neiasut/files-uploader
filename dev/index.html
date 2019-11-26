@@ -18,21 +18,47 @@
             display: block;
             margin-bottom: 1rem;
         }
+        .row{
+            display: flex;
+            flex-direction: row;
+            margin: 0 -20px;
+        }
+        .column{
+            padding: 0 20px;
+            width: 50%;
+        }
+        .container{
+            max-width: 980px;
+            padding: 0 20px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
-    <h1>Files-Uploader</h1>
-    <div class="fieldWrapper">
-        <label class="fieldLabel">First field</label>
-        <input type="file" id="example1" />
-    </div>
-    <div class="fieldWrapper">
-        <label class="fieldLabel">Second field</label>
-        <input type="file" id="exampleImage" />
-    </div>
-    <div class="fieldWrapper">
-        <label class="fieldLabel">Error field</label>
-        <input type="file" id="errorField" />
+    <div class="container">
+        <h1>Files-Uploader</h1>
+        <div class="row">
+            <div class="column">
+                <div class="fieldWrapper">
+                    <label class="fieldLabel">First field</label>
+                    <input type="file" id="example1" />
+                </div>
+                <div class="fieldWrapper">
+                    <label class="fieldLabel">Second field</label>
+                    <input type="file" id="exampleImage" />
+                </div>
+            </div>
+            <div class="column">
+                <div class="fieldWrapper">
+                    <label class="fieldLabel">Error field</label>
+                    <input type="file" id="errorField" />
+                </div>
+                <div class="fieldWrapper">
+                    <label class="fieldLabel">Destroy 5s</label>
+                    <input type="file" id="destroyField" />
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

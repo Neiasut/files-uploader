@@ -23,3 +23,14 @@ test('add multiple', () => {
   expect(a).toBe(7);
   expect(fn).toHaveBeenCalledTimes(2);
 });
+
+test('unregister', () => {
+  const instance = new EventDispatcher<boolean>();
+  const cb = jest.fn();
+  instance.register(cb);
+  instance.fire(true);
+  expect(cb).toHaveBeenCalledTimes(1);
+  instance.unregister(cb);
+  instance.fire(true);
+  expect(cb).toHaveBeenCalledTimes(1);
+});

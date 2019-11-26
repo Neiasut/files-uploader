@@ -36,6 +36,11 @@ export const setInput = (input: HTMLInputElement, maxFiles: number, acceptTypes:
   setAcceptTypes(input, acceptTypes);
 };
 
+export const unsetInput = (input: HTMLInputElement) => {
+  input.classList.remove('FilesUploaderLoader-Input');
+  input.removeAttribute('data-files-uploader-element');
+};
+
 const setAcceptTypes = (input: HTMLInputElement, acceptTypes: string[]) => {
   input.accept = acceptTypes.map(type => `.${type}`).join(', ');
 };

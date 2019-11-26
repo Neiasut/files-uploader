@@ -93,16 +93,24 @@ export interface FilesUploaderAddFileToQueueEvent extends FilesUploaderEvent {
   file: File;
 }
 
-export interface FilesUploaderAddFileEvent extends FilesUploaderEvent {
-  data: FilesUploaderFileData;
-}
-
-export interface FilesUploaderRemoveFileEvent extends FilesUploaderEvent {
-  data: FilesUploaderFileData;
-}
-
-export interface FilesUploaderUploadFileEvent extends FilesUploaderEvent {
+export interface FilesUploaderRemoveFileFromQueueEvent extends FilesUploaderEvent {
   file: File;
+}
+
+export interface FilesUploaderAddFileToListEvent extends FilesUploaderEvent {
+  data: FilesUploaderFileData;
+}
+
+export interface FilesUploaderRemoveFileFromListEvent extends FilesUploaderEvent {
+  data: FilesUploaderFileData;
+}
+
+export interface FilesUploaderFileUploadEvent extends FilesUploaderEvent {
+  file: File;
+}
+
+export interface FilesUploaderFileRemoveEvent extends FilesUploaderEvent {
+  data: FilesUploaderFileData;
 }
 
 export interface FilesUploaderFileData extends FilesUploaderFileInfo {
@@ -122,6 +130,12 @@ export type FilesUploaderAvailableStatusesUploading =
 export interface QueueElement {
   status: FilesUploaderStatus;
   id: string;
+}
+
+export interface QueueDidChangeLengthEvent<T extends QueueElement> {
+  element: T;
+  queueLength: number;
+  queueOldLength: number;
 }
 
 export interface SubComponentInfo {
