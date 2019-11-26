@@ -1,6 +1,6 @@
 {
   "name": "files-uploader",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "dist/filesUploader.js",
   "repository": "https://github.com/Neiasut/files-uploader",
   "author": "neiasut <kerlaeeda@gmail.com>",
